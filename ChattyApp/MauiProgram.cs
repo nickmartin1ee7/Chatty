@@ -28,7 +28,7 @@ namespace ChattyApp
 
             builder.Services.AddSingleton<ChatHubService>(sp =>
                 new ChatHubService(sp.GetRequiredService<IConfiguration>()
-                    .GetSection("SignalR:ChatHubUrl")
+                    .GetSection("SignalR:HubUrl")
                     .Value));
 
             builder.Services.AddTransient<MainPageViewModel>();

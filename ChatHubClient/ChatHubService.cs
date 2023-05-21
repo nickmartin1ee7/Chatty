@@ -9,8 +9,11 @@ public class ChatHubService : IAsyncDisposable
 
     public ChatHubService(string hubUrl)
     {
+        var chatHubUrl = new UriBuilder(hubUrl);
+        chatHubUrl.Path = "chathub";
+
         _connection = new HubConnectionBuilder()
-            .WithUrl(hubUrl)
+            .WithUrl(chatHubUrl.ToString())
             .Build();
 
         _connection.On<string, string>("ReceiveMessage", (senderId, message) =>

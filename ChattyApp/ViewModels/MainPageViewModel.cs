@@ -2,18 +2,25 @@ using System.Windows.Input;
 
 using ChatHubClient;
 
+using Microsoft.Extensions.Logging;
+
 namespace ChattyApp.ViewModels;
 
 public class MainPageViewModel : BaseViewModel
 {
+    private readonly ILogger<MainPageViewModel> _logger;
     private readonly ChatHubService _chatHub;
+    private readonly Queue<Func<Task>> _messages = new();
     private readonly Task _messageProcessor;
+    private string _username;
     private string _chatText;
     private string _messageText;
-    private readonly Queue<Func<Task>> _messages = new();
 
-    public MainPageViewModel(ChatHubService chatHub)
+    public MainPageViewModel(
+        ILogger<MainPageViewModel> logger,
+        ChatHubService chatHub)
     {
+        _logger = logger;
         _chatHub = chatHub;
 
         SendCommand = new Command(
@@ -51,12 +58,29 @@ public class MainPageViewModel : BaseViewModel
         _messages.Enqueue(async () =>
         {
             if (!_chatHub.IsStarted)
-                await _chatHub.StartAsync("Testificate");
+            {
+                _logger.LogInformation("Sending message is re-initializing chat hub connection with username: {username}",
+                    Username);
+
+                await _chatHub.StartAsync(Username);
+            }
+
+            _logger.LogInformation("Sending Message: {messageText}",
+                MessageText);
 
             await _chatHub.SendMessageAsync(MessageText);
 
-            _messages.Dequeue();
+            MessageText = string.Empty;
         });
+    }
+
+    public string Username
+    {
+        get => _username;
+        set
+        {
+            SetField(ref _username, value);
+        }
     }
 
     public string ChatText
@@ -83,6 +107,11 @@ public class MainPageViewModel : BaseViewModel
     public async Task InitializeAsync()
     {
         if (!_chatHub.IsStarted)
-            await _chatHub.StartAsync("Testificate");
+        {
+            _logger.LogInformation("Initializing chat hub connection with username: {username}",
+                Username);
+
+            await _chatHub.StartAsync(Username);
+        }
     }
 }

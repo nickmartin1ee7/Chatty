@@ -10,8 +10,8 @@ namespace TestProject
         [SetUp]
         public void Setup()
         {
-            _chatHubA = new ChatHubService("https://e640-2600-1700-77c0-5b30-c800-997e-31b8-a778.ngrok-free.app/chathub");
-            _chatHubB = new ChatHubService("https://e640-2600-1700-77c0-5b30-c800-997e-31b8-a778.ngrok-free.app/chathub");
+            _chatHubA = new ChatHubService("https://e640-2600-1700-77c0-5b30-c800-997e-31b8-a778.ngrok-free.app");
+            _chatHubB = new ChatHubService("https://e640-2600-1700-77c0-5b30-c800-997e-31b8-a778.ngrok-free.app");
         }
 
         [Test]
