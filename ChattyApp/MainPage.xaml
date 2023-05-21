@@ -5,37 +5,90 @@
              x:DataType="vm:MainPageViewModel"
              x:Class="ChattyApp.MainPage"
              Title="Chatty">
-    <Grid
-        ColumnDefinitions="*"
-        RowDefinitions="*,Auto,Auto,Auto">
+    <VerticalStackLayout>
+        <!--Registration view-->
+        <Grid
+            ColumnDefinitions="*"
+            RowDefinitions="*,*,*"
+            IsVisible="True">
+            <Grid.Triggers>
+                <DataTrigger
+                    TargetType="Grid"
+                    Binding="{Binding IsRegistered}"
+                    Value="True">
+                    <Setter
+                        Property="Grid.IsVisible"
+                        Value="False"/>
+                </DataTrigger>
+            </Grid.Triggers>
+            <Label
+                Grid.Column="0"
+                Grid.Row="0"
+                Text="Username"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                FontAttributes="Bold"
+                Padding="0,0,0,30"
+                />
+            <Entry
+                Grid.Column="0"
+                Grid.Row="1"
+                Text="{Binding UsernameText}"
+                Placeholder="Enter username..."
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                />
+            <Button
+                Grid.Column="0"
+                Grid.Row="2"
+                Text="Register"
+                Command="{Binding RegisterCommand}"
+                />
+        </Grid>
+        <!--Chat view-->
+        <Grid
+            ColumnDefinitions="*"
+            RowDefinitions="*,Auto,Auto,Auto"
+            IsVisible="False">
+            <Grid.Triggers>
+                <DataTrigger
+                    TargetType="Grid"
+                    Binding="{Binding IsRegistered}"
+                    Value="True">
+                    <Setter
+                        Property="Grid.IsVisible"
+                        Value="True"/>
+                </DataTrigger>
+            </Grid.Triggers>
 
-        <Entry
-            Grid.Column="0"
-            Grid.Row="0"
-            Placeholder="No message history yet."
-            Text="{Binding ChatText}"
-            IsEnabled="False"
-            />
+            <Entry
+                Grid.Column="0"
+                Grid.Row="0"
+                Placeholder="No message history yet."
+                Text="{Binding ChatText}"
+                IsEnabled="False"
+                />
 
-        <BoxView
-            Grid.Column="0"
-            Grid.Row="1"
-            HeightRequest="1"
-            Color="Black"
-            />
+            <BoxView
+                Grid.Column="0"
+                Grid.Row="1"
+                HeightRequest="1"
+                Color="Black"
+                />
 
-        <Entry
-            Grid.Column="0"
-            Grid.Row="2"
-            Placeholder="Enter message..."
-            Text="{Binding MessageText}"
-            />
+            <Entry
+                Grid.Column="0"
+                Grid.Row="2"
+                Placeholder="Enter message..."
+                Text="{Binding MessageText}"
+                />
 
-        <Button
-            Grid.Column="0"
-            Grid.Row="3"
-            Text="Send"
-            Command="{Binding SendCommand }"
-            />
-    </Grid>
+            <Button
+                Grid.Column="0"
+                Grid.Row="3"
+                Text="Send"
+                Command="{Binding SendCommand}"
+                />
+        </Grid>
+    </VerticalStackLayout>
 </ContentPage>

@@ -11,10 +11,4 @@ public partial class MainPage : ContentPage
         BindingContext = _vm = vm;
         InitializeComponent();
     }
-
-    protected override async void OnAppearing()
-    {
-        await _vm.InitializeAsync();
-        base.OnAppearing();
-    }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add SignalR
+builder.Services.AddSingleton<ChatHub>();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
@@ -32,20 +34,27 @@ app.UseEndpoints(endpoints =>
     endpoints.MapHub<ChatHub>("/chathub");
 });
 
-app.MapGet("/healthcheck", () => "Healthy")
-    .WithName("GetHealthCheck");
+app.MapGet("/healthcheck",
+        () => "Healthy")
+.WithName("GetHealthCheck");
+
+app.MapGet("/chathub/clients",
+        ([FromServices] ChatHub chatHub) =>
+            chatHub.ConnectedUsers)
+    .WithName("GetChatHubClients");
 
 app.Run();
 
 public class ChatHub : Hub
 {
     private readonly ILogger<ChatHub> _logger;
-    private static readonly ConcurrentDictionary<string, string> s_connectedUsers = new();
 
     public ChatHub(ILogger<ChatHub> logger)
     {
         _logger = logger;
     }
+
+    public ConcurrentDictionary<string, string> ConnectedUsers { get; } = new();
 
     public async Task SendMessage(string username, string recipientUsername, string message)
     {
@@ -62,7 +71,7 @@ public class ChatHub : Hub
         }
         else
         {
-            if (s_connectedUsers.TryGetValue(recipientUsername, out string? recipientId))
+            if (ConnectedUsers.TryGetValue(recipientUsername, out string? recipientId))
             {
                 await Clients.Client(recipientId).SendAsync("ReceiveMessage", senderId, $"{username}: {message}");
             }
@@ -80,7 +89,7 @@ public class ChatHub : Hub
 
         _logger.LogInformation("New connection: {userId}", userId);
 
-        s_connectedUsers.TryAdd(userId, string.Empty);
+        ConnectedUsers.TryAdd(userId, string.Empty);
         await Clients.All.SendAsync("UserConnected", userId);
         await base.OnConnectedAsync();
     }
@@ -91,7 +100,7 @@ public class ChatHub : Hub
 
         _logger.LogInformation("Connection ended: {userId}", userId);
 
-        s_connectedUsers.TryRemove(userId, out _);
+        ConnectedUsers.TryRemove(userId, out _);
         await Clients.All.SendAsync("UserDisconnected", userId);
         await base.OnDisconnectedAsync(exception);
     }
@@ -104,7 +113,7 @@ public class ChatHub : Hub
             userId,
             username);
 
-        s_connectedUsers[userId] = username;
+        ConnectedUsers[userId] = username;
         await Clients.Client(userId).SendAsync("UsernameRegistered", username);
     }
 }
