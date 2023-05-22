@@ -24,6 +24,9 @@ public class ChatHubService : IAsyncDisposable
 
         _connection.On<string>("UserDisconnected", (userId) =>
             OnUserDisconnected?.Invoke(this, userId));
+
+        _connection.On<string>("UsernameRegistered", (userName) =>
+            OnUsernameRegistered?.Invoke(this, userName));
     }
 
     public bool IsStarted { get; private set; }
@@ -31,6 +34,7 @@ public class ChatHubService : IAsyncDisposable
     public event EventHandler<(string userId, string message)> OnMessageReceived;
     public event EventHandler<string> OnUserConnected;
     public event EventHandler<string> OnUserDisconnected;
+    public event EventHandler<string> OnUsernameRegistered;
 
     public async Task StartAsync(string username)
     {

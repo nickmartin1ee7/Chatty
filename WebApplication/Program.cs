@@ -109,6 +109,9 @@ public class ChatHub : Hub
     {
         string userId = Context.ConnectionId;
 
+        if (ConnectedUsers.Any(c => c.Value == username))
+            return;
+
         _logger.LogInformation("Connection {userId} registered username: {username}",
             userId,
             username);

@@ -16,6 +16,7 @@ public class MainPageViewModel : BaseViewModel
     private string _chatText;
     private string _messageText;
     private bool _isRegistered;
+    private bool _isLoading;
 
     public MainPageViewModel(
         ILogger<MainPageViewModel> logger,
@@ -23,6 +24,9 @@ public class MainPageViewModel : BaseViewModel
     {
         _logger = logger;
         _chatHub = chatHub;
+
+        _chatHub.OnMessageReceived += ChatHubOnOnMessageReceived;
+        _chatHub.OnUsernameRegistered += ChatHubOnUsernameRegistered;
 
         SendCommand = new Command(
             execute: SendMessage,
@@ -37,10 +41,26 @@ public class MainPageViewModel : BaseViewModel
         _messageProcessor = Task.Run(MessageProcessorJobAsync);
     }
 
+    private void ChatHubOnUsernameRegistered(object sender, string userName)
+    {
+        AppendChatText($"System: {userName} joined");
+    }
+
+    private void AppendChatText(string message)
+    {
+        ChatText += $"{message}{Environment.NewLine}{Environment.NewLine}";
+    }
+
+    private void ChatHubOnOnMessageReceived(object sender, (string userId, string message) userMessage)
+    {
+        AppendChatText(userMessage.message);
+    }
+
     private async Task RegisterAsync()
     {
         try
         {
+            ToggleLoading();
             await _chatHub.StartAsync(UsernameText);
             IsRegistered = _chatHub.IsStarted;
         }
@@ -51,6 +71,15 @@ public class MainPageViewModel : BaseViewModel
 
             IsRegistered = false;
         }
+        finally
+        {
+            ToggleLoading();
+        }
+    }
+
+    private void ToggleLoading()
+    {
+        IsLoading = !IsLoading;
     }
 
     private async Task MessageProcessorJobAsync()
@@ -87,6 +116,12 @@ public class MainPageViewModel : BaseViewModel
         if (string.IsNullOrWhiteSpace(MessageText))
             return;
 
+        var message = MessageText;
+
+        MessageText = string.Empty;
+        (SendCommand as Command).ChangeCanExecute();
+
+
         _messages.Enqueue(async () =>
         {
             if (!_chatHub.IsStarted)
@@ -98,11 +133,9 @@ public class MainPageViewModel : BaseViewModel
             }
 
             _logger.LogInformation("Sending Message: {messageText}",
-                MessageText);
+                message);
 
-            await _chatHub.SendMessageAsync(MessageText);
-
-            MessageText = string.Empty;
+            await _chatHub.SendMessageAsync(message);
         });
     }
 
@@ -141,6 +174,15 @@ public class MainPageViewModel : BaseViewModel
         set
         {
             SetField(ref _isRegistered, value);
+        }
+    }
+
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set
+        {
+            SetField(ref _isLoading, value);
         }
     }
 

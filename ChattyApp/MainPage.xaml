@@ -5,11 +5,15 @@
              x:DataType="vm:MainPageViewModel"
              x:Class="ChattyApp.MainPage"
              Title="Chatty">
-    <VerticalStackLayout>
+    <VerticalStackLayout
+        Padding="5,0,5,0">
+        <ActivityIndicator
+            IsRunning="{Binding IsLoading}"
+            />
         <!--Registration view-->
         <Grid
-            ColumnDefinitions="*"
-            RowDefinitions="*,*,*"
+            ColumnDefinitions="Auto, *"
+            RowDefinitions="*,Auto,*"
             IsVisible="True">
             <Grid.Triggers>
                 <DataTrigger
@@ -23,15 +27,25 @@
             </Grid.Triggers>
             <Label
                 Grid.Column="0"
+                Grid.ColumnSpan="2"
                 Grid.Row="0"
-                Text="Username"
+                Text="Login"
                 VerticalOptions="Center"
                 HorizontalOptions="Center"
                 FontAttributes="Bold"
-                Padding="0,0,0,30"
+                FontSize="24"
+                Padding="0,0,0,15"
+                />
+            <Label
+                Grid.Column="0"
+                Grid.Row="1"
+                Text="Username"
+                Padding="0,0,5,0"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
                 />
             <Entry
-                Grid.Column="0"
+                Grid.Column="1"
                 Grid.Row="1"
                 Text="{Binding UsernameText}"
                 Placeholder="Enter username..."
@@ -40,10 +54,22 @@
                 />
             <Button
                 Grid.Column="0"
+                Grid.ColumnSpan="2"
                 Grid.Row="2"
                 Text="Register"
-                Command="{Binding RegisterCommand}"
-                />
+                FontAttributes="Bold"
+                Command="{Binding RegisterCommand}">
+                <Button.Triggers>
+                    <DataTrigger
+                        TargetType="Button"
+                        Binding="{Binding IsLoading}"
+                        Value="True">
+                        <Setter
+                            Property="Button.IsEnabled"
+                            Value="False"/>
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
         </Grid>
         <!--Chat view-->
         <Grid
@@ -60,15 +86,16 @@
                         Value="True"/>
                 </DataTrigger>
             </Grid.Triggers>
-
-            <Entry
+            <ScrollView
                 Grid.Column="0"
-                Grid.Row="0"
-                Placeholder="No message history yet."
-                Text="{Binding ChatText}"
-                IsEnabled="False"
+                Grid.Row="0">
+                <Editor
+                    Placeholder="No message history yet."
+                    Text="{Binding ChatText}"
+                    IsEnabled="False"
+                    AutoSize="TextChanges"
                 />
-
+            </ScrollView>
             <BoxView
                 Grid.Column="0"
                 Grid.Row="1"
@@ -87,6 +114,7 @@
                 Grid.Column="0"
                 Grid.Row="3"
                 Text="Send"
+                FontAttributes="Bold"
                 Command="{Binding SendCommand}"
                 />
         </Grid>
