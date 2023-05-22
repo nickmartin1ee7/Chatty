@@ -16,8 +16,8 @@ public class ChatHubService : IAsyncDisposable
             .WithUrl(chatHubUrl.ToString())
             .Build();
 
-        _connection.On<string, string>("ReceiveMessage", (senderId, message) =>
-            OnMessageReceived?.Invoke(this, (senderId, message)));
+        _connection.On<Message>("ReceiveMessage", (message) =>
+            OnMessageReceived?.Invoke(this, message));
 
         _connection.On<string>("UserConnected", (userId) =>
             OnUserConnected?.Invoke(this, userId));
@@ -31,7 +31,7 @@ public class ChatHubService : IAsyncDisposable
 
     public bool IsStarted { get; private set; }
 
-    public event EventHandler<(string userId, string message)> OnMessageReceived;
+    public event EventHandler<Message> OnMessageReceived;
     public event EventHandler<string> OnUserConnected;
     public event EventHandler<string> OnUserDisconnected;
     public event EventHandler<string> OnUsernameRegistered;
@@ -65,7 +65,7 @@ public class ChatHubService : IAsyncDisposable
 
     public Task SendMessageAsync(string message, string recipientUsername = "all")
     {
-        return _connection.InvokeAsync("SendMessage", _username, recipientUsername, message);
+        return _connection.InvokeAsync("SendMessage", new Message(new User(_username), message, new User(recipientUsername)));
     }
 
     private Task RegisterUsernameAsync(string username)

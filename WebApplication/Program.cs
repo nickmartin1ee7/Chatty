@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 
+using ChatHubClient;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -54,26 +56,25 @@ public class ChatHub : Hub
         _logger = logger;
     }
 
-    public ConcurrentDictionary<string, string> ConnectedUsers { get; } = new();
+    public ConcurrentDictionary<string, User> ConnectedUsers { get; } = new();
 
-    public async Task SendMessage(string username, string recipientUsername, string message)
+    public async Task SendMessage(Message message)
     {
         string senderId = Context.ConnectionId;
 
-        _logger.LogInformation("New message from {username} to {recipientUsername}: {message}",
-            username,
-            recipientUsername,
-            message);
+        _logger.LogInformation("New message: {message}", message);
 
-        if (recipientUsername == "all")
+        if (message.Recipient?.Username == "all")
         {
-            await Clients.All.SendAsync("ReceiveMessage", senderId, $"{username}: {message}");
+            await Clients.All.SendAsync("ReceiveMessage", message);
         }
         else
         {
-            if (ConnectedUsers.TryGetValue(recipientUsername, out string? recipientId))
+            var recipientId = ConnectedUsers.FirstOrDefault(u => u.Value.Username == message.Recipient?.Username).Key;
+
+            if (!string.IsNullOrEmpty(recipientId))
             {
-                await Clients.Client(recipientId).SendAsync("ReceiveMessage", senderId, $"{username}: {message}");
+                await Clients.Client(recipientId).SendAsync("ReceiveMessage", message);
             }
             else
             {
@@ -89,7 +90,7 @@ public class ChatHub : Hub
 
         _logger.LogInformation("New connection: {userId}", userId);
 
-        ConnectedUsers.TryAdd(userId, string.Empty);
+        ConnectedUsers.TryAdd(userId, new User(string.Empty));
         await Clients.All.SendAsync("UserConnected", userId);
         await base.OnConnectedAsync();
     }
@@ -109,14 +110,14 @@ public class ChatHub : Hub
     {
         string userId = Context.ConnectionId;
 
-        if (ConnectedUsers.Any(c => c.Value == username))
+        if (ConnectedUsers.Any(c => c.Value.Username == username))
             return;
 
         _logger.LogInformation("Connection {userId} registered username: {username}",
             userId,
             username);
 
-        ConnectedUsers[userId] = username;
+        ConnectedUsers[userId] = new User(username);
         await Clients.Client(userId).SendAsync("UsernameRegistered", username);
     }
 }

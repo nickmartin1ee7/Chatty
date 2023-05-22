@@ -11,4 +11,14 @@ public partial class MainPage : ContentPage
         BindingContext = _vm = vm;
         InitializeComponent();
     }
+
+    private void Message_Entry_OnCompleted(object sender, EventArgs e)
+    {
+        _vm.SendCommand.Execute(this);
+    }
+
+    private void Username_Entry_OnCompleted(object sender, EventArgs e)
+    {
+        _vm.RegisterCommand.Execute(this);
+    }
 }

@@ -43,17 +43,17 @@ public class MainPageViewModel : BaseViewModel
 
     private void ChatHubOnUsernameRegistered(object sender, string userName)
     {
-        AppendChatText($"System: {userName} joined");
+        AppendChatText($"[{DateTime.Now}] System: {userName} joined");
+    }
+
+    private void ChatHubOnOnMessageReceived(object sender, Message userMessage)
+    {
+        AppendChatText($"[{userMessage.Timestamp}] {userMessage.Sender.Username}: {userMessage.Content}");
     }
 
     private void AppendChatText(string message)
     {
         ChatText += $"{message}{Environment.NewLine}{Environment.NewLine}";
-    }
-
-    private void ChatHubOnOnMessageReceived(object sender, (string userId, string message) userMessage)
-    {
-        AppendChatText(userMessage.message);
     }
 
     private async Task RegisterAsync()
