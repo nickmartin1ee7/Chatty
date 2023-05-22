@@ -2,61 +2,34 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ChattyApp.ViewModels"
+             xmlns:chattyApp="clr-namespace:ChattyApp"
              x:DataType="vm:MainPageViewModel"
              x:Class="ChattyApp.MainPage"
              Title="Chatty">
-    <VerticalStackLayout
-        Padding="5,0,5,0">
+    <ContentPage.Resources>
+        <chattyApp:BoolNotConverter x:Key="BoolNotConverter" />
+    </ContentPage.Resources>
+    <Grid
+            ColumnDefinitions="*"
+            RowDefinitions="Auto,*,Auto, Auto"
+            Padding="0,0,5,0">
         <ActivityIndicator
-            IsRunning="{Binding IsLoading}"
-            />
-        <!--Registration view-->
-        <Grid
-            ColumnDefinitions="Auto, *"
-            RowDefinitions="*,Auto,*"
-            IsVisible="True">
-            <Grid.Triggers>
-                <DataTrigger
-                    TargetType="Grid"
-                    Binding="{Binding IsRegistered}"
-                    Value="True">
-                    <Setter
-                        Property="Grid.IsVisible"
-                        Value="False"/>
-                </DataTrigger>
-            </Grid.Triggers>
-            <Label
                 Grid.Column="0"
-                Grid.ColumnSpan="2"
                 Grid.Row="0"
-                Text="Login"
-                VerticalOptions="Center"
-                HorizontalOptions="Center"
-                FontAttributes="Bold"
-                FontSize="24"
-                Padding="0,0,0,15"
+                IsRunning="{Binding IsLoading}"
                 />
-            <Label
-                Grid.Column="0"
-                Grid.Row="1"
-                Text="Username"
-                Padding="0,0,5,0"
-                VerticalOptions="Center"
-                HorizontalOptions="Center"
-                />
+        <VerticalStackLayout
+            Grid.Column="0"
+            Grid.Row="1"
+            IsVisible="{Binding IsRegistered, Converter={StaticResource BoolNotConverter}}">
             <Entry
-                Grid.Column="1"
-                Grid.Row="1"
                 Text="{Binding UsernameText}"
                 Placeholder="Enter username..."
                 VerticalOptions="Center"
                 HorizontalOptions="Center"
                 Completed="Username_Entry_OnCompleted"
-                />
+            />
             <Button
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Grid.Row="2"
                 Text="Register"
                 FontAttributes="Bold"
                 Command="{Binding RegisterCommand}">
@@ -71,54 +44,37 @@
                     </DataTrigger>
                 </Button.Triggers>
             </Button>
-        </Grid>
-        <!--Chat view-->
-        <Grid
-            ColumnDefinitions="*"
-            RowDefinitions="*,Auto,Auto,Auto"
-            IsVisible="False">
-            <Grid.Triggers>
-                <DataTrigger
-                    TargetType="Grid"
-                    Binding="{Binding IsRegistered}"
-                    Value="True">
-                    <Setter
-                        Property="Grid.IsVisible"
-                        Value="True"/>
-                </DataTrigger>
-            </Grid.Triggers>
-            <ScrollView
+        </VerticalStackLayout>
+        <Editor
+            Grid.Column="0"
+            Grid.Row="1"
+            Placeholder="No message history yet."
+            Text="{Binding ChatText}"
+            IsEnabled="False"
+            IsVisible="{Binding IsRegistered}"
+            />
+        <BoxView
                 Grid.Column="0"
-                Grid.Row="0">
-                <Editor
-                    Placeholder="No message history yet."
-                    Text="{Binding ChatText}"
-                    IsEnabled="False"
-                    AutoSize="TextChanges"
-                />
-            </ScrollView>
-            <BoxView
-                Grid.Column="0"
-                Grid.Row="1"
+                Grid.Row="2"
                 HeightRequest="1"
                 Color="Black"
                 />
-
-            <Entry
-                Grid.Column="0"
-                Grid.Row="2"
-                Placeholder="Enter message..."
-                Text="{Binding MessageText}"
-                Completed="Message_Entry_OnCompleted"
-                />
-
-            <Button
+        <VerticalStackLayout
                 Grid.Column="0"
                 Grid.Row="3"
-                Text="Send"
-                FontAttributes="Bold"
-                Command="{Binding SendCommand}"
-                />
-        </Grid>
-    </VerticalStackLayout>
+                IsVisible="{Binding IsRegistered}">
+            <Entry
+                    Placeholder="Enter message..."
+                    Text="{Binding MessageText}"
+                    IsSpellCheckEnabled="True"
+                    Completed="Message_Entry_OnCompleted"
+                    />
+
+            <Button
+                    Text="Send"
+                    FontAttributes="Bold"
+                    Command="{Binding SendCommand}"
+                    />
+        </VerticalStackLayout>
+    </Grid>
 </ContentPage>
