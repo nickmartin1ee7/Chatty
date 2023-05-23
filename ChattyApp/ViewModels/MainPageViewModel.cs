@@ -69,6 +69,8 @@ public class MainPageViewModel : BaseViewModel
         {
             _logger.LogError(e, "Failed to register with username: {username}",
                 UsernameText);
+
+            ToggleLoading();
         }
     }
 
