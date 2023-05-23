@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 using ChatHubClient;
@@ -43,17 +44,18 @@ public class MainPageViewModel : BaseViewModel
 
     private void ChatHubOnUsernameRegistered(object sender, string userName)
     {
-        AppendChatText($"[{DateTime.Now}] System: {userName} joined");
+        if (userName == UsernameText)
+        {
+            IsRegistered = true;
+            ToggleLoading();
+        }
+
+        Messages.Add(new Message(new User("System"), $"{userName} joined"));
     }
 
     private void ChatHubOnOnMessageReceived(object sender, Message userMessage)
     {
-        AppendChatText($"[{userMessage.Timestamp}] {userMessage.Sender.Username}: {userMessage.Content}");
-    }
-
-    private void AppendChatText(string message)
-    {
-        ChatText += $"{message}{Environment.NewLine}{Environment.NewLine}";
+        Messages.Add(userMessage);
     }
 
     private async Task RegisterAsync()
@@ -62,18 +64,11 @@ public class MainPageViewModel : BaseViewModel
         {
             ToggleLoading();
             await _chatHub.StartAsync(UsernameText);
-            IsRegistered = _chatHub.IsStarted;
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to register with username: {username}",
                 UsernameText);
-
-            IsRegistered = false;
-        }
-        finally
-        {
-            ToggleLoading();
         }
     }
 
@@ -138,6 +133,8 @@ public class MainPageViewModel : BaseViewModel
             await _chatHub.SendMessageAsync(message);
         });
     }
+
+    public ObservableCollection<Message> Messages { get; } = new();
 
     public string UsernameText
     {
