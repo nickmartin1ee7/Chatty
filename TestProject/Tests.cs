@@ -25,7 +25,7 @@ namespace TestProject
                 activated = true;
             };
 
-            await _chatHubA.StartAsync("UnitTest");
+            await _chatHubA.StartAsync("UnitTest1");
 
             Assert.IsTrue(_chatHubA.IsStarted);
 
@@ -35,7 +35,7 @@ namespace TestProject
         }
 
         [Test]
-        public async Task OnMessageReceived()
+        public async Task OnAllMessageReceived()
         {
             bool received = false;
 
@@ -45,13 +45,63 @@ namespace TestProject
                 received = true;
             };
 
-            await _chatHubA.StartAsync("UnitTest");
+            await _chatHubA.StartAsync("UnitTest2");
 
             Assert.IsTrue(_chatHubA.IsStarted);
 
             await Task.Delay(200);
 
             await _chatHubA.SendMessageAsync("Testing!");
+
+            await Task.Delay(200);
+
+            Assert.IsTrue(received);
+        }
+
+        [Test]
+        public async Task OnDmMessageReceived()
+        {
+            bool received = false;
+
+            _chatHubA.OnMessageReceived += (o, e) =>
+            {
+                Console.WriteLine(e);
+                received = true;
+            };
+
+            _chatHubA.OnUsernameRegistered += async (o, e) =>
+            {
+                if (e == "UnitTest3")
+                    await _chatHubA.SendMessageAsync("Testing!", "UnitTest3");
+            };
+
+            await _chatHubA.StartAsync("UnitTest3");
+
+            Assert.IsTrue(_chatHubA.IsStarted);
+
+            await Task.Delay(5000);
+
+            Assert.IsTrue(received);
+        }
+
+        [Test]
+        public async Task OnReconnectOlderMessagesReceived()
+        {
+            bool received = false;
+
+            await _chatHubA.StartAsync("UnitTest4");
+            await _chatHubA.SendMessageAsync("Testing!");
+            await _chatHubA.StopAsync();
+
+            _chatHubA.OnMessageReceived += (o, e) =>
+            {
+                Console.WriteLine(e);
+                received = true;
+            };
+
+            await _chatHubA.StartAsync("UnitTest4");
+
+            Assert.IsTrue(_chatHubA.IsStarted);
 
             await Task.Delay(200);
 
@@ -79,8 +129,8 @@ namespace TestProject
                 received = true;
             };
 
-            await _chatHubA.StartAsync("UnitTestA");
-            await _chatHubB.StartAsync("UnitTestB");
+            await _chatHubA.StartAsync("UnitTest5");
+            await _chatHubB.StartAsync("UnitTest6");
 
             Assert.IsTrue(_chatHubA.IsStarted);
             Assert.IsTrue(_chatHubB.IsStarted);
@@ -89,7 +139,7 @@ namespace TestProject
 
             await _chatHubB.StopAsync();
 
-            await Task.Delay(200);
+            await Task.Delay(600);
 
             Assert.IsTrue(received);
 

@@ -75,7 +75,6 @@ public class ChatHubService : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (_connection is not null)
-            await _connection.DisposeAsync();
+        await _connection.DisposeAsync();
     }
 }
