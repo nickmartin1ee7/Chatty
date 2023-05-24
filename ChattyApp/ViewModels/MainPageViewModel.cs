@@ -48,6 +48,7 @@ public class MainPageViewModel : BaseViewModel
         {
             IsRegistered = true;
             ToggleLoading();
+            _logger.LogInformation("User {username} successfully registered", UsernameText);
         }
 
         Messages.Add(new Message(new User("System"), $"{userName} joined"));
@@ -63,11 +64,12 @@ public class MainPageViewModel : BaseViewModel
         try
         {
             ToggleLoading();
+            _logger.LogInformation("Attempting to register user under the username: {username}", UsernameText);
             await _chatHub.StartAsync(UsernameText);
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failed to register with username: {username}",
+            _logger.LogError(e, "Failed to register user with username: {username}",
                 UsernameText);
 
             ToggleLoading();
@@ -96,6 +98,7 @@ public class MainPageViewModel : BaseViewModel
 
                 await messageAction();
                 _messages.Dequeue();
+                _logger.LogInformation("Message sent for username: {username}", UsernameText);
                 failureCount = 0;
             }
             catch (Exception ex)
@@ -103,7 +106,9 @@ public class MainPageViewModel : BaseViewModel
                 failureCount++;
 
                 if (failureCount % 300 == 0)
-                    _logger.LogError(ex, "Failed to dequeue message");
+                    _logger.LogError(ex, "Failed to dequeue message for user {username}; Failure count: {failureCount}",
+                        UsernameText,
+                        failureCount);
             }
         }
     }
@@ -129,7 +134,8 @@ public class MainPageViewModel : BaseViewModel
                 await _chatHub.StartAsync(UsernameText);
             }
 
-            _logger.LogInformation("Sending Message: {messageText}",
+            _logger.LogInformation("User {username} is sending message: {messageText}",
+                UsernameText,
                 message);
 
             await _chatHub.SendMessageAsync(message);

@@ -12,6 +12,8 @@ namespace ChattyApp
 {
     public static class MauiProgram
     {
+        private static IConfiguration s_config;
+
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
@@ -23,13 +25,14 @@ namespace ChattyApp
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            AddConfiguration(builder); // This sets: s_config
+
             AddLogger(builder);
-            AddConfiguration(builder);
 
             builder.Services.AddSingleton<ChatHubService>(sp =>
-                new ChatHubService(sp.GetRequiredService<IConfiguration>()
+                new ChatHubService(s_config
                     .GetSection("SignalR:HubUrl")
-                    .Value));
+                    .Value!));
 
             builder.Services.AddTransient<MainPageViewModel>();
             builder.Services.AddTransient<MainPage>();
@@ -42,7 +45,9 @@ namespace ChattyApp
         {
             builder.Services.AddLogging(logger =>
                 logger.AddSerilog(Log.Logger = new LoggerConfiguration()
-                    .WriteTo.Console()
+                    .WriteTo.Seq(
+                        serverUrl: s_config.GetSection("Telemetry:LoggingUrl").Value!,
+                        apiKey: s_config.GetSection("Telemetry:LoggingApiKey").Value!)
                     .CreateLogger()));
 
             return builder;
@@ -56,11 +61,11 @@ namespace ChattyApp
                                          .GetManifestResourceStream(configFileName)
                                      ?? throw new ArgumentException($"Configuration file ({configFileName}) not found!", nameof(configFileName));
 
-            var config = new ConfigurationBuilder()
+            s_config = new ConfigurationBuilder()
                 .AddJsonStream(configStream)
                 .Build();
 
-            builder.Configuration.AddConfiguration(config);
+            builder.Configuration.AddConfiguration(s_config);
 
             return builder;
         }

@@ -10,8 +10,8 @@ namespace TestProject
         [SetUp]
         public void Setup()
         {
-            _chatHubA = new ChatHubService("https://e640-2600-1700-77c0-5b30-c800-997e-31b8-a778.ngrok-free.app");
-            _chatHubB = new ChatHubService("https://e640-2600-1700-77c0-5b30-c800-997e-31b8-a778.ngrok-free.app");
+            _chatHubA = new ChatHubService("http://localhost:5080");
+            _chatHubB = new ChatHubService("http://localhost:5080");
         }
 
         [Test]
@@ -126,7 +126,7 @@ namespace TestProject
             _chatHubA.OnUserDisconnected += (o, e) =>
             {
                 Console.WriteLine($"{nameof(_chatHubA)}.{nameof(OnUserDisconnected)}: {e}");
-                received = true;
+                received = e == "UnitTest6";
             };
 
             await _chatHubA.StartAsync("UnitTest5");
