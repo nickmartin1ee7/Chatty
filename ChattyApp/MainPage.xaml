@@ -5,28 +5,31 @@
              xmlns:chattyApp="clr-namespace:ChattyApp"
              x:Class="ChattyApp.MainPage"
              Title="Chatty">
-             <!--x:DataType="vm:MainPageViewModel"-->
+    <!--x:DataType="vm:MainPageViewModel"-->
     <ContentPage.Resources>
         <chattyApp:BoolNotConverter x:Key="BoolNotConverter" />
     </ContentPage.Resources>
     <Grid
             ColumnDefinitions="*"
             RowDefinitions="Auto,*,Auto, Auto">
-        <HorizontalStackLayout
+        <Label
             Grid.Column="0"
             Grid.Row="0"
-            IsVisible="{Binding StatusVisibility}">
-            <Label
-                Text="{Binding StatusLabelText}"
-                BackgroundColor="{Binding StatusLabelColor}"
-                />
-        </HorizontalStackLayout>
+            HorizontalOptions="Fill"
+            HorizontalTextAlignment="Center"
+            Padding="5"
+            FontAttributes="Bold"
+            FontSize="Large"
+            Text="{Binding StatusLabelText}"
+            BackgroundColor="{Binding StatusLabelColor}"
+            IsVisible="{Binding StatusVisibility}"
+            />
         <ActivityIndicator
-                Grid.Column="0"
-                Grid.Row="1"
-                HorizontalOptions="Center"
-                IsRunning="{Binding IsLoading}"
-                />
+            Grid.Column="0"
+            Grid.Row="1"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsLoading}"
+            />
         <VerticalStackLayout
             Grid.Column="0"
             Grid.Row="1"

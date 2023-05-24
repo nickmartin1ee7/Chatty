@@ -21,6 +21,7 @@ public class MainPageViewModel : BaseViewModel
     private bool _isLoading;
     private Color _statusLabelColor;
     private bool _statusVisibility;
+    private string _activeUsername;
 
     public MainPageViewModel(
         ILogger<MainPageViewModel> logger,
@@ -52,17 +53,17 @@ public class MainPageViewModel : BaseViewModel
 
     private async void ChatHubOnReconnected(object sender, string e)
     {
-        await ShowTemporaryStatus("Back online!", System.Drawing.Color.Green);
+        await ShowTemporaryStatusAsync("Back online", System.Drawing.Color.Green);
     }
 
     private async void ChatHubOnReconnecting(object sender, Exception e)
     {
-        await ShowTemporaryStatus("Back online", System.Drawing.Color.Green);
+        await ShowConstantStatusAsync("Reconnecting...", System.Drawing.Color.Gray);
     }
 
     private async void ChatHubOnClosed(object sender, Exception e)
     {
-        await ShowTemporaryStatus("Offline", System.Drawing.Color.Red);
+        await ShowConstantStatusAsync("Offline", System.Drawing.Color.Red);
     }
 
     private void ChatHubOnOnUserDisconnected(object sender, string username)
@@ -70,7 +71,7 @@ public class MainPageViewModel : BaseViewModel
         Messages.Add(new Message(new User("System"), $"{username} left"));
     }
 
-    private async Task ShowTemporaryStatus(string text, System.Drawing.Color color)
+    private async Task ShowTemporaryStatusAsync(string text, System.Drawing.Color color)
     {
         StatusLabelText = text;
         StatusLabelColor = color.ConvertToMauiColor();
@@ -81,13 +82,21 @@ public class MainPageViewModel : BaseViewModel
         StatusVisibility = false;
     }
 
+    private async Task ShowConstantStatusAsync(string text, System.Drawing.Color color)
+    {
+        StatusLabelText = text;
+        StatusLabelColor = color.ConvertToMauiColor();
+        StatusVisibility = true;
+    }
+
     private void ChatHubOnUsernameRegistered(object sender, string username)
     {
-        if (username == UsernameText)
+        if (username == _activeUsername)
         {
             IsRegistered = true;
             ToggleLoading();
-            _logger.LogInformation("User {username} successfully registered", UsernameText);
+            _ = ShowTemporaryStatusAsync("Connected", System.Drawing.Color.Green);
+            _logger.LogInformation("User {username} successfully registered", _activeUsername);
         }
 
         Messages.Add(new Message(new User("System"), $"{username} joined"));
@@ -100,16 +109,18 @@ public class MainPageViewModel : BaseViewModel
 
     private async Task RegisterAsync()
     {
+        _activeUsername = UsernameText; // Avoid using this field to determine user name from this point onwards
+
         try
         {
             ToggleLoading();
-            _logger.LogInformation("Attempting to register user under the username: {username}", UsernameText);
-            await _chatHub.StartAsync(UsernameText);
+            _logger.LogInformation("Attempting to register user under the username: {username}", _activeUsername);
+            await _chatHub.StartAsync(_activeUsername);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to register user with username: {username}",
-                UsernameText);
+                _activeUsername);
 
             ToggleLoading();
         }
@@ -137,7 +148,7 @@ public class MainPageViewModel : BaseViewModel
 
                 await messageAction();
                 _messages.Dequeue();
-                _logger.LogInformation("Message sent for username: {username}", UsernameText);
+                _logger.LogInformation("Message sent for username: {username}", _activeUsername);
                 failureCount = 0;
             }
             catch (Exception ex)
@@ -146,7 +157,7 @@ public class MainPageViewModel : BaseViewModel
 
                 if (failureCount % 300 == 0)
                     _logger.LogError(ex, "Failed to dequeue message for user {username}; Failure count: {failureCount}",
-                        UsernameText,
+                        _activeUsername,
                         failureCount);
             }
         }
@@ -168,13 +179,13 @@ public class MainPageViewModel : BaseViewModel
             if (!_chatHub.IsStarted)
             {
                 _logger.LogInformation("Sending message is re-initializing chat hub connection with username: {username}",
-                    UsernameText);
+                    _activeUsername);
 
-                await _chatHub.StartAsync(UsernameText);
+                await _chatHub.StartAsync(_activeUsername);
             }
 
             _logger.LogInformation("User {username} is sending message: {messageText}",
-                UsernameText,
+                _activeUsername,
                 message);
 
             await _chatHub.SendMessageAsync(message);
