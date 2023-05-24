@@ -48,6 +48,11 @@ app.MapPost("/chathub/message",
             await chatHub.SendMessage(message))
     .WithName("PostChatHubMessage");
 
+app.MapPost("/chathub/register",
+        async ([FromServices] ChatHub chatHub, [FromBody] string username) =>
+            await chatHub.RegisterUsername(username))
+    .WithName("PostChatHubRegisterUsername");
+
 app.MapDelete("/chathub/message",
         ([FromServices] ChatHub chatHub) =>
             chatHub.Messages.Clear())

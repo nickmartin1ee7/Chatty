@@ -21,6 +21,9 @@ public class ChatHub : Hub
     {
         Messages.Enqueue(message);
 
+        if (Context is null)
+            return;
+
         string senderId = Context.ConnectionId;
 
         _logger.LogInformation("New message: {message}; Correlation Id: {cid}", message, message.Id);
@@ -50,6 +53,9 @@ public class ChatHub : Hub
 
     public override async Task OnConnectedAsync()
     {
+        if (Context is null)
+            return;
+
         string userId = Context.ConnectionId;
 
         _logger.LogInformation("New connection: {userId}", userId);
@@ -61,6 +67,9 @@ public class ChatHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        if (Context is null)
+            return;
+
         string userId = Context.ConnectionId;
 
         if (!ConnectedUsers.TryRemove(userId, out var username))
@@ -82,6 +91,9 @@ public class ChatHub : Hub
 
     public async Task RegisterUsername(string username)
     {
+        if (Context is null)
+            return;
+
         string userId = Context.ConnectionId;
 
         if (ConnectedUsers.Any(c => c.Value.Username == username))
