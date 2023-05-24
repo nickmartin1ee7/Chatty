@@ -1,0 +1,55 @@
+name: Android CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+
+    - uses: actions/setup-java@v2
+      with:
+        distribution: 'microsoft'
+        java-version: '11'
+
+    - name: Install MAUI Workloads
+      run: |
+        dotnet workload install android --ignore-failed-sources
+        dotnet workload install maui --ignore-failed-sources
+
+    - name: Restore dependencies
+      run: nuget restore
+      
+    - name: Set Android version
+      uses: damienaicheh/update-android-version-manifest-action@v1.0.0
+      with:
+        android-manifest-path: ./ChattyApp/Platforms/Android/AndroidManifest.xml
+        version-name: ${{ vars.APP_VERSION }}
+        version-code: ${{ github.run_number }}
+        
+    - name: Publish
+      run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release --no-restore
+      
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.0.0
+      with:
+        path: "**/Release/*.apk"
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1      
+      with:
+        tag_name: ${{ github.workflow }}
+        name: Chatty v${{ vars.APP_VERSION }} (Build ${{ github.run_number }})
+        draft: false
+        prerelease: false
+        files: "**/bin/Release/*-Signed.apk"
