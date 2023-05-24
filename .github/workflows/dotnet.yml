@@ -31,7 +31,7 @@ jobs:
       - name: Set Android version
         uses: damienaicheh/update-android-version-manifest-action@v1.0.0
         with:
-          android-manifest-path: "**/ChattyApp/Platforms/Android/AndroidManifest.xml"
+          android-manifest-path: "./ChattyApp/Platforms/Android/AndroidManifest.xml"
           version-name: ${{ vars.APP_VERSION }}.${{ github.run_number }}
           version-code: ${{ github.run_number }}
       - name: Publish
