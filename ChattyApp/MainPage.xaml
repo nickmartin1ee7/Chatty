@@ -12,6 +12,15 @@
     <Grid
             ColumnDefinitions="*"
             RowDefinitions="Auto,*,Auto, Auto">
+        <HorizontalStackLayout
+            Grid.Column="0"
+            Grid.Row="0"
+            IsVisible="{Binding StatusVisibility}">
+            <Label
+                Text="{Binding StatusLabelText}"
+                BackgroundColor="{Binding StatusLabelColor}"
+                />
+        </HorizontalStackLayout>
         <ActivityIndicator
                 Grid.Column="0"
                 Grid.Row="1"

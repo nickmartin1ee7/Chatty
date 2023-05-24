@@ -16,6 +16,12 @@ public class ChatHubService : IAsyncDisposable
             .WithUrl(chatHubUrl.ToString())
             .Build();
 
+        _connection.Closed += async exception => OnClosed?.Invoke(this, exception);
+
+        _connection.Reconnecting += async exception => OnReconnecting?.Invoke(this, exception);
+
+        _connection.Reconnected += async newConnectionId => OnReconnected?.Invoke(this, newConnectionId);
+
         _connection.On<Message>("ReceiveMessage", (message) =>
             OnMessageReceived?.Invoke(this, message));
 
@@ -35,6 +41,9 @@ public class ChatHubService : IAsyncDisposable
     public event EventHandler<string> OnUserConnected;
     public event EventHandler<string> OnUserDisconnected;
     public event EventHandler<string> OnUsernameRegistered;
+    public event EventHandler<Exception> OnClosed;
+    public event EventHandler<Exception> OnReconnecting;
+    public event EventHandler<string> OnReconnected;
 
     public async Task StartAsync(string username)
     {

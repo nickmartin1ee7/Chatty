@@ -45,6 +45,7 @@ namespace ChattyApp
         {
             builder.Services.AddLogging(logger =>
                 logger.AddSerilog(Log.Logger = new LoggerConfiguration()
+                    .WriteTo.Console()
                     .WriteTo.Seq(
                         serverUrl: s_config.GetSection("Telemetry:LoggingUrl").Value!,
                         apiKey: s_config.GetSection("Telemetry:LoggingApiKey").Value!)

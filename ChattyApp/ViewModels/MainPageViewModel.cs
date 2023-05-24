@@ -16,8 +16,11 @@ public class MainPageViewModel : BaseViewModel
     private string _usernameText;
     private string _chatText;
     private string _messageText;
+    private string _statusLabelText;
     private bool _isRegistered;
     private bool _isLoading;
+    private Color _statusLabelColor;
+    private bool _statusVisibility;
 
     public MainPageViewModel(
         ILogger<MainPageViewModel> logger,
@@ -26,6 +29,11 @@ public class MainPageViewModel : BaseViewModel
         _logger = logger;
         _chatHub = chatHub;
 
+        _chatHub.OnClosed += ChatHubOnClosed;
+        _chatHub.OnReconnecting += ChatHubOnReconnecting;
+        _chatHub.OnReconnected += ChatHubOnReconnected;
+
+        _chatHub.OnUserDisconnected += ChatHubOnOnUserDisconnected;
         _chatHub.OnMessageReceived += ChatHubOnOnMessageReceived;
         _chatHub.OnUsernameRegistered += ChatHubOnUsernameRegistered;
 
@@ -42,16 +50,47 @@ public class MainPageViewModel : BaseViewModel
         _messageProcessor = Task.Run(MessageProcessorJobAsync);
     }
 
-    private void ChatHubOnUsernameRegistered(object sender, string userName)
+    private async void ChatHubOnReconnected(object sender, string e)
     {
-        if (userName == UsernameText)
+        await ShowTemporaryStatus("Back online!", System.Drawing.Color.Green);
+    }
+
+    private async void ChatHubOnReconnecting(object sender, Exception e)
+    {
+        await ShowTemporaryStatus("Back online", System.Drawing.Color.Green);
+    }
+
+    private async void ChatHubOnClosed(object sender, Exception e)
+    {
+        await ShowTemporaryStatus("Offline", System.Drawing.Color.Red);
+    }
+
+    private void ChatHubOnOnUserDisconnected(object sender, string username)
+    {
+        Messages.Add(new Message(new User("System"), $"{username} left"));
+    }
+
+    private async Task ShowTemporaryStatus(string text, System.Drawing.Color color)
+    {
+        StatusLabelText = text;
+        StatusLabelColor = color.ConvertToMauiColor();
+        StatusVisibility = true;
+
+        await Task.Delay(TimeSpan.FromSeconds(5));
+
+        StatusVisibility = false;
+    }
+
+    private void ChatHubOnUsernameRegistered(object sender, string username)
+    {
+        if (username == UsernameText)
         {
             IsRegistered = true;
             ToggleLoading();
             _logger.LogInformation("User {username} successfully registered", UsernameText);
         }
 
-        Messages.Add(new Message(new User("System"), $"{userName} joined"));
+        Messages.Add(new Message(new User("System"), $"{username} joined"));
     }
 
     private void ChatHubOnOnMessageReceived(object sender, Message userMessage)
@@ -188,6 +227,33 @@ public class MainPageViewModel : BaseViewModel
         set
         {
             SetField(ref _isLoading, value);
+        }
+    }
+
+    public string StatusLabelText
+    {
+        get => _statusLabelText;
+        set
+        {
+            SetField(ref _statusLabelText, value);
+        }
+    }
+
+    public Color StatusLabelColor
+    {
+        get => _statusLabelColor;
+        set
+        {
+            SetField(ref _statusLabelColor, value);
+        }
+    }
+
+    public bool StatusVisibility
+    {
+        get => _statusVisibility;
+        set
+        {
+            SetField(ref _statusVisibility, value);
         }
     }
 
