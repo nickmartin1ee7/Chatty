@@ -12,6 +12,12 @@ public partial class MainPage : ContentPage
         InitializeComponent();
     }
 
+    protected override void OnAppearing()
+    {
+        _vm.StartConnectionTestJob();
+        base.OnAppearing();
+    }
+
     private void Message_Entry_OnCompleted(object sender, EventArgs e)
     {
         _vm.SendCommand.Execute(this);

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using System.Net.NetworkInformation;
+
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace ChatHubClient;
 
@@ -6,14 +8,15 @@ public class ChatHubService : IAsyncDisposable
 {
     private readonly HubConnection _connection;
     private string _username;
+    private readonly UriBuilder _chatHubUrl;
 
     public ChatHubService(string hubUrl)
     {
-        var chatHubUrl = new UriBuilder(hubUrl);
-        chatHubUrl.Path = "chathub";
+        _chatHubUrl = new(hubUrl);
+        _chatHubUrl.Path = "chathub";
 
         _connection = new HubConnectionBuilder()
-            .WithUrl(chatHubUrl.ToString())
+            .WithUrl(_chatHubUrl.ToString())
             .Build();
 
         _connection.Closed += async exception => OnClosed?.Invoke(this, exception);
@@ -85,5 +88,17 @@ public class ChatHubService : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await _connection.DisposeAsync();
+    }
+
+    public async Task<bool> TestConnectivityAsync()
+    {
+        try
+        {
+            return new Ping().Send(_chatHubUrl.Host).Status == System.Net.NetworkInformation.IPStatus.Success;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
     }
 }

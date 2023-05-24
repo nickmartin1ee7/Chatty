@@ -22,6 +22,7 @@ public class MainPageViewModel : BaseViewModel
     private Color _statusLabelColor;
     private bool _statusVisibility;
     private string _activeUsername;
+    private Task _connectivityCheckerJob;
 
     public MainPageViewModel(
         ILogger<MainPageViewModel> logger,
@@ -189,6 +190,26 @@ public class MainPageViewModel : BaseViewModel
                 message);
 
             await _chatHub.SendMessageAsync(message);
+        });
+    }
+
+    public void StartConnectionTestJob()
+    {
+        _connectivityCheckerJob = Task.Run(async () =>
+        {
+            while (true)
+            {
+                if (!await _chatHub.TestConnectivityAsync())
+                {
+                    await ShowConstantStatusAsync("Offline", System.Drawing.Color.Red);
+                }
+                else if (StatusLabelText == "Offline" && StatusVisibility) // TODO: Make a state enum
+                {
+                    await ShowTemporaryStatusAsync("Back online", System.Drawing.Color.Green);
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
         });
     }
 
