@@ -32,7 +32,7 @@ jobs:
         uses: damienaicheh/update-android-version-manifest-action@v1.0.0
         with:
           android-manifest-path: ./ChattyApp/Platforms/Android/AndroidManifest.xml
-          version-name: ${{ env.APP_VERSION }}
+          version-name: ${{ vars.APP_VERSION }}.${{ github.run_number }}
           version-code: ${{ github.run_number }}
       - name: Publish
         run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release --no-restore
@@ -49,7 +49,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.workflow }}
-          name: Chatty v${{ env.APP_VERSION }} (Build ${{ github.run_number }})
+          name: Chatty v${{ vars.APP_VERSION }}.${{ github.run_number }}
           draft: false
           prerelease: false
           files: "**/Release/*.apk"
