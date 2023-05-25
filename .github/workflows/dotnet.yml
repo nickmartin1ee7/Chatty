@@ -45,11 +45,11 @@ jobs:
           # Write the modified content back to the AndroidManifest.xml file
           $manifestContent | Set-Content -Path $manifestPath
       - name: Publish
-        run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release --no-restore
+        run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release --no-restore -o release
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.0.0
         with:
-          path: "**/*.apk"
+          path: "release/*-Signed.apk"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -57,4 +57,4 @@ jobs:
           name: Chatty v${{ vars.APP_VERSION }}.${{ github.run_number }}
           draft: false
           prerelease: false
-          files: "**/*.apk"
+          files: "release/*-Signed.apk"
