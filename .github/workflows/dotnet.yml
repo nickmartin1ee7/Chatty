@@ -53,7 +53,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.workflow }}
+          tag_name: "CICD"
           name: Chatty v${{ vars.APP_VERSION }}.${{ github.run_number }}
           draft: false
           prerelease: false
