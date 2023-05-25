@@ -10,8 +10,9 @@ namespace TestProject
         [SetUp]
         public void Setup()
         {
-            _chatHubA = new ChatHubService("http://localhost:5080");
-            _chatHubB = new ChatHubService("http://localhost:5080");
+            var httpClient = new HttpClient();
+            _chatHubA = new ChatHubService(httpClient, "http://localhost:5080");
+            _chatHubB = new ChatHubService(httpClient, "http://localhost:5080");
         }
 
         [Test]

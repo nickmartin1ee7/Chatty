@@ -7,7 +7,6 @@ public class ChatHubService : IAsyncDisposable
     private readonly HttpClient _httpClient;
     private readonly HubConnection _connection;
     private readonly UriBuilder _chatHubUrl;
-    private string _username;
 
     public ChatHubService(HttpClient httpClient, string hubUrl)
     {
@@ -20,11 +19,14 @@ public class ChatHubService : IAsyncDisposable
             .WithUrl(_chatHubUrl.ToString())
             .Build();
 
-        _connection.Closed += async exception => OnClosed?.Invoke(this, exception);
+        _connection.Closed += async exception =>
+            OnClosed?.Invoke(this, exception);
 
-        _connection.Reconnecting += async exception => OnReconnecting?.Invoke(this, exception);
+        _connection.Reconnecting += async exception =>
+            OnReconnecting?.Invoke(this, exception);
 
-        _connection.Reconnected += async newConnectionId => OnReconnected?.Invoke(this, newConnectionId);
+        _connection.Reconnected += async newConnectionId =>
+            OnReconnected?.Invoke(this, newConnectionId);
 
         _connection.On<Message>("ReceiveMessage", (message) =>
             OnMessageReceived?.Invoke(this, message));
@@ -40,6 +42,7 @@ public class ChatHubService : IAsyncDisposable
     }
 
     public bool IsStarted { get; private set; }
+    public string ActiveUsername { get; private set; }
 
     public event EventHandler<Message> OnMessageReceived;
     public event EventHandler<string> OnUserConnected;
@@ -56,16 +59,17 @@ public class ChatHubService : IAsyncDisposable
 
         IsStarted = true;
 
-        _username = username;
-
         try
         {
+            ActiveUsername = username;
             await _connection.StartAsync();
-            await RegisterUsernameAsync(username);
+            await RegisterUsernameAsync(username ?? throw new ArgumentNullException(nameof(username)));
         }
         catch (Exception ex)
         {
+            await _connection.DisposeAsync();
             IsStarted = false;
+            ActiveUsername = null;
             throw;
         }
     }
@@ -76,9 +80,13 @@ public class ChatHubService : IAsyncDisposable
         return _connection.StopAsync();
     }
 
-    public Task SendMessageAsync(string message, string recipientUsername = "all")
+    public Task SendMessageAsync(string content, string recipientUsername = "all")
     {
-        return _connection.InvokeAsync("SendMessage", new Message(new User(_username), message, new User(recipientUsername)));
+        var message = new Message(new User(ActiveUsername), content, new User(recipientUsername));
+
+        return message.IsValid()
+            ? _connection.InvokeAsync("SendMessage", message)
+            : Task.CompletedTask;
     }
 
     private Task RegisterUsernameAsync(string username)

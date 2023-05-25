@@ -5,6 +5,9 @@ using ChatHubClient;
 
 using Microsoft.Extensions.Logging;
 
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.AndroidOption;
+
 namespace ChattyApp.ViewModels;
 
 public class MainPageViewModel : BaseViewModel
@@ -21,7 +24,6 @@ public class MainPageViewModel : BaseViewModel
     private bool _isLoading;
     private Color _statusLabelColor;
     private bool _statusVisibility;
-    private string _activeUsername;
     private Task _connectivityCheckerJob;
 
     public MainPageViewModel(
@@ -95,12 +97,12 @@ public class MainPageViewModel : BaseViewModel
 
     private void ChatHubOnUsernameRegistered(object sender, string username)
     {
-        if (username == _activeUsername)
+        if (username == _chatHub.ActiveUsername)
         {
             IsRegistered = true;
             ToggleLoading();
             _ = ShowTemporaryStatusAsync("Connected", System.Drawing.Color.Green);
-            _logger.LogInformation("User {username} successfully registered", _activeUsername);
+            _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
         }
 
         Messages.Add(new Message(new User("System"), $"{username} joined")
@@ -110,22 +112,45 @@ public class MainPageViewModel : BaseViewModel
     private void ChatHubOnOnMessageReceived(object sender, Message userMessage)
     {
         Messages.Add(userMessage);
+
+        if (userMessage.Sender.Username != _chatHub.ActiveUsername // Not current user
+            && userMessage.Timestamp >= DateTimeOffset.UtcNow.AddMinutes(-2)) // Received less than two minutes ago
+            ShowNewMessageNotification(userMessage);
+    }
+
+    private void ShowNewMessageNotification(Message userMessage)
+    {
+        const int NEW_MESSAGE_ID = 100;
+
+        var request = new NotificationRequest
+        {
+            NotificationId = NEW_MESSAGE_ID,
+            Title = "New Message",
+            Subtitle = userMessage.Sender.Username,
+            Description = userMessage.Content,
+            Android = new AndroidOptions
+            {
+                LaunchAppWhenTapped = true,
+            },
+
+        };
+        LocalNotificationCenter.Current.Show(request);
     }
 
     private async Task RegisterAsync()
     {
-        _activeUsername = UsernameText; // Avoid using this field to determine user name from this point onwards
+        var username = UsernameText;
 
         try
         {
             ToggleLoading();
-            _logger.LogInformation("Attempting to register user under the username: {username}", _activeUsername);
-            await _chatHub.StartAsync(_activeUsername);
+            _logger.LogInformation("Attempting to register user under the username: {username}", username);
+            await _chatHub.StartAsync(username);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Failed to register user with username: {username}",
-                _activeUsername);
+                username);
 
             ToggleLoading();
         }
@@ -153,7 +178,7 @@ public class MainPageViewModel : BaseViewModel
 
                 await messageAction();
                 _messages.Dequeue();
-                _logger.LogInformation("Message sent for username: {username}", _activeUsername);
+                _logger.LogInformation("Message sent for username: {username}", _chatHub.ActiveUsername);
                 failureCount = 0;
             }
             catch (Exception ex)
@@ -162,7 +187,7 @@ public class MainPageViewModel : BaseViewModel
 
                 if (failureCount % 300 == 0)
                     _logger.LogError(ex, "Failed to dequeue message for user {username}; Failure count: {failureCount}",
-                        _activeUsername,
+                        _chatHub.ActiveUsername,
                         failureCount);
             }
         }
@@ -184,13 +209,13 @@ public class MainPageViewModel : BaseViewModel
             if (!_chatHub.IsStarted)
             {
                 _logger.LogInformation("Sending message is re-initializing chat hub connection with username: {username}",
-                    _activeUsername);
+                    _chatHub.ActiveUsername);
 
-                await _chatHub.StartAsync(_activeUsername);
+                await _chatHub.StartAsync(_chatHub.ActiveUsername);
             }
 
             _logger.LogInformation("User {username} is sending message: {messageText}",
-                _activeUsername,
+                _chatHub.ActiveUsername,
                 message);
 
             await _chatHub.SendMessageAsync(message);

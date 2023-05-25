@@ -10,4 +10,8 @@ public record Message(User Sender, string Content, User? Recipient = null)
         Timestamp = timestamp;
         return this;
     }
+
+    public bool IsValid() =>
+        !string.IsNullOrEmpty(Content)
+        && !string.IsNullOrEmpty(Sender.Username);
 }

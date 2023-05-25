@@ -12,10 +12,40 @@ public partial class MainPage : ContentPage
         InitializeComponent();
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
+        await TryRequestNotificationsEnabled();
         _vm.StartConnectionTestJob();
         base.OnAppearing();
+    }
+
+    private static async Task TryRequestNotificationsEnabled()
+    {
+        var enabled = AreDeviceNotificationsEnabled();
+
+        if (!enabled)
+        {
+            var result = await Application.Current!.MainPage!.DisplayAlert(
+                "Enable Notifications",
+                "Your notifications are currently turned off for this app. To receive audio notifications, you need to enable them.",
+                "Go to Settings",
+                "Cancel");
+
+            if (result)
+            {
+                AppInfo.ShowSettingsUI();
+            }
+        }
+    }
+
+    public static bool AreDeviceNotificationsEnabled()
+    {
+#if ANDROID
+        return AndroidX.Core.App.NotificationManagerCompat.From(Platform.CurrentActivity!).AreNotificationsEnabled();
+#elif IOS
+        var settings = UIKit.UIApplication.SharedApplication.CurrentUserNotificationSettings.Types;
+        return settings != UIKit.UIUserNotificationType.None;
+#endif
     }
 
     private void Message_Entry_OnCompleted(object sender, EventArgs e)

@@ -21,6 +21,9 @@ public class ChatHub : Hub
     {
         message.Timestamp = DateTime.UtcNow;
 
+        if (!message.IsValid())
+            return;
+
         Messages.Enqueue(message);
 
         if (Context is null)
