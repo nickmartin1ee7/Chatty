@@ -29,10 +29,14 @@ namespace ChattyApp
 
             AddLogger(builder);
 
+            builder.Services.AddTransient<HttpClient>();
+
             builder.Services.AddSingleton<ChatHubService>(sp =>
-                new ChatHubService(s_config
-                    .GetSection("SignalR:HubUrl")
-                    .Value!));
+                new ChatHubService(
+                    sp.GetRequiredService<HttpClient>(),
+                    s_config
+                        .GetSection("SignalR:HubUrl")
+                        .Value!));
 
             builder.Services.AddTransient<MainPageViewModel>();
             builder.Services.AddTransient<MainPage>();

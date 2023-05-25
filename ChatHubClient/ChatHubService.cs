@@ -1,21 +1,22 @@
-﻿using System.Net.NetworkInformation;
-
-using Microsoft.AspNetCore.SignalR.Client;
+﻿using Microsoft.AspNetCore.SignalR.Client;
 
 namespace ChatHubClient;
 
 public class ChatHubService : IAsyncDisposable
 {
+    private readonly HttpClient _httpClient;
     private readonly HubConnection _connection;
-    private string _username;
     private readonly UriBuilder _chatHubUrl;
+    private string _username;
 
-    public ChatHubService(string hubUrl)
+    public ChatHubService(HttpClient httpClient, string hubUrl)
     {
+        _httpClient = httpClient;
         _chatHubUrl = new(hubUrl);
         _chatHubUrl.Path = "chathub";
 
         _connection = new HubConnectionBuilder()
+            .WithAutomaticReconnect()
             .WithUrl(_chatHubUrl.ToString())
             .Build();
 
@@ -77,7 +78,7 @@ public class ChatHubService : IAsyncDisposable
 
     public Task SendMessageAsync(string message, string recipientUsername = "all")
     {
-        return _connection.InvokeAsync("SendMessage", new Message(new User(_username), message, new User(recipientUsername)));
+        return _connection.InvokeAsync("SendMessage", new Message(new User(_username), message, DateTimeOffset.Now, new User(recipientUsername)));
     }
 
     private Task RegisterUsernameAsync(string username)
@@ -94,7 +95,9 @@ public class ChatHubService : IAsyncDisposable
     {
         try
         {
-            return new Ping().Send(_chatHubUrl.Host).Status == System.Net.NetworkInformation.IPStatus.Success;
+            var result = await _httpClient.GetAsync(_chatHubUrl.Uri.AbsoluteUri
+                .Replace(_chatHubUrl.Uri.PathAndQuery, "/healthcheck"));
+            return result.IsSuccessStatusCode;
         }
         catch (Exception e)
         {

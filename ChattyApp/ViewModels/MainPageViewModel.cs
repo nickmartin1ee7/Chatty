@@ -69,7 +69,7 @@ public class MainPageViewModel : BaseViewModel
 
     private void ChatHubOnOnUserDisconnected(object sender, string username)
     {
-        Messages.Add(new Message(new User("System"), $"{username} left"));
+        Messages.Add(new Message(new User("System"), $"{username} left", DateTimeOffset.Now));
     }
 
     private async Task ShowTemporaryStatusAsync(string text, System.Drawing.Color color)
@@ -100,7 +100,7 @@ public class MainPageViewModel : BaseViewModel
             _logger.LogInformation("User {username} successfully registered", _activeUsername);
         }
 
-        Messages.Add(new Message(new User("System"), $"{username} joined"));
+        Messages.Add(new Message(new User("System"), $"{username} joined", DateTimeOffset.Now));
     }
 
     private void ChatHubOnOnMessageReceived(object sender, Message userMessage)
