@@ -27,11 +27,6 @@ jobs:
           dotnet workload install maui --ignore-failed-sources
       - name: Restore dependencies
         run: nuget restore
-
-  android-build:
-    needs: build
-    runs-on: windows-latest
-    steps:
       - name: Set Android version
         run: |
           $manifestPath = (Get-ChildItem -Path . -Filter AndroidManifest.xml -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1).FullName
@@ -55,11 +50,6 @@ jobs:
         uses: actions/upload-artifact@v3.0.0
         with:
           path: "**/Release/*.apk"
-
-  create-release:
-    needs: android-build
-    runs-on: windows-latest
-    steps:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
