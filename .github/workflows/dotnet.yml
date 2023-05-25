@@ -9,6 +9,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
+      
+      - name: Print Directory Structure
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse
+      
       - name: Setup .NET
         uses: actions/setup-dotnet@v2
         with:
