@@ -49,7 +49,7 @@ jobs:
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.0.0
         with:
-          path: "**/Release/*.apk"
+          path: "**/*.apk"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -57,4 +57,4 @@ jobs:
           name: Chatty v${{ vars.APP_VERSION }}.${{ github.run_number }}
           draft: false
           prerelease: false
-          files: "**/Release/*.apk"
+          files: "**/*.apk"
