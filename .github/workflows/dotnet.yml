@@ -32,14 +32,9 @@ jobs:
     needs: build
     runs-on: windows-latest
     steps:
-      - name: Get AndroidManifest.xml
-        id: get-manifest
-        run: |
-          $manifestPath = (Get-ChildItem -Path . -Filter AndroidManifest.xml -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1).FullName
-          echo "::set-output name=manifestPath::$manifestPath"
       - name: Set Android version
         run: |
-          $manifestPath = $env:MANIFEST_PATH
+          $manifestPath = (Get-ChildItem -Path . -Filter AndroidManifest.xml -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1).FullName
           $versionName = "${{ env.APP_VERSION }}.${{ github.run_number }}"
           $versionCode = "${{ github.run_number }}"
 
@@ -54,12 +49,6 @@ jobs:
 
           # Write the modified content back to the AndroidManifest.xml file
           $manifestContent | Set-Content -Path $manifestPath
-
-          # Set the output variables
-          Write-Host "::set-output name=versionName::$versionName"
-          Write-Host "::set-output name=versionCode::$versionCode"
-        env:
-          MANIFEST_PATH: ${{ steps.get-manifest.outputs.manifestPath }}
       - name: Publish
         run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release --no-restore
       - name: Upload a Build Artifact
