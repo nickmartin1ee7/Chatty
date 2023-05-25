@@ -8,6 +8,7 @@
     <!--x:DataType="vm:MainPageViewModel"-->
     <ContentPage.Resources>
         <chattyApp:BoolNotConverter x:Key="BoolNotConverter" />
+        <chattyApp:DateTimeOffsetToLocalDateTimeConverter x:Key="DateTimeOffsetConverter" />
     </ContentPage.Resources>
     <Grid
             ColumnDefinitions="*"
@@ -40,6 +41,7 @@
                 Placeholder="Enter username..."
                 HorizontalTextAlignment="Center"
                 Completed="Username_Entry_OnCompleted"
+                IsEnabled="{Binding IsRegistered, Converter={StaticResource BoolNotConverter}}"
             />
             <Button
                 Text="Register"
@@ -89,7 +91,7 @@
                             <Label
                                 Grid.Column="4"
                                 Grid.Row="0"
-                                Text="{Binding Timestamp, StringFormat='{}{0:MM/dd/yyyy a\\t h:mm tt}'}"
+                                Text="{Binding Timestamp, Converter={StaticResource DateTimeOffsetConverter}, StringFormat='{}{0:MM/dd/yyyy h:mm tt}'}"
                                 FontSize="Micro"
                                 VerticalTextAlignment="Center"
                                 />

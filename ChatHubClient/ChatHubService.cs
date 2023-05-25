@@ -78,7 +78,7 @@ public class ChatHubService : IAsyncDisposable
 
     public Task SendMessageAsync(string message, string recipientUsername = "all")
     {
-        return _connection.InvokeAsync("SendMessage", new Message(new User(_username), message, DateTimeOffset.Now, new User(recipientUsername)));
+        return _connection.InvokeAsync("SendMessage", new Message(new User(_username), message, new User(recipientUsername)));
     }
 
     private Task RegisterUsernameAsync(string username)

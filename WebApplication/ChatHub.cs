@@ -19,6 +19,8 @@ public class ChatHub : Hub
 
     public async Task SendMessage(Message message)
     {
+        message.Timestamp = DateTime.UtcNow;
+
         Messages.Enqueue(message);
 
         if (Context is null)
