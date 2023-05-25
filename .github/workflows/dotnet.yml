@@ -38,11 +38,27 @@ jobs:
           $manifestPath = (Get-ChildItem -Path . -Filter AndroidManifest.xml -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1).FullName
           echo "::set-output name=manifestPath::$manifestPath"
       - name: Set Android version
-        uses: damienaicheh/update-android-version-manifest-action@v1.0.0
-        with:
-          android-manifest-path: ${{ steps.get-manifest.outputs.manifestPath }}
-          version-name: ${{ vars.APP_VERSION }}.${{ github.run_number }}
-          version-code: ${{ github.run_number }}
+        run: |
+          $manifestPath = "${{ steps.get-manifest.outputs.manifestPath }}"
+          $versionName = "${{ env.APP_VERSION }}.${{ github.run_number }}"
+          $versionCode = "${{ github.run_number }}"
+
+          # Read the AndroidManifest.xml file
+          $manifestContent = Get-Content -Path $manifestPath
+
+          # Find and replace the version-name
+          $manifestContent = $manifestContent -replace '(?<=version-name=")[^"]+', $versionName
+
+          # Find and replace the version-code
+          $manifestContent = $manifestContent -replace '(?<=versionCode=")[^"]+', $versionCode
+
+          # Write the modified content back to the AndroidManifest.xml file
+          $manifestContent | Set-Content -Path $manifestPath
+
+          # Set the output variables
+          Write-Host "::set-output name=versionName::$versionName"
+          Write-Host "::set-output name=versionCode::$versionCode"
+
       - name: Publish
         run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release --no-restore
       - name: Upload a Build Artifact
