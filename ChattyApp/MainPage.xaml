@@ -112,7 +112,6 @@
             Grid.Row="2"
             HeightRequest="1"
             IsVisible="{Binding IsRegistered}"
-            Color="Black"
             />
         <VerticalStackLayout
             Grid.Column="0"
