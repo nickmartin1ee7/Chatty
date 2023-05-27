@@ -46,9 +46,11 @@ jobs:
           $manifestContent | Set-Content -Path $manifestPath
       - name: Replace values in appsettings.json
         run: |
-          sed -i "s/\"HubUrl\": \"REPLACEME\"/\"HubUrl\": \"${{ secrets.HubUrl }}\"/g" appsettings.json
-          sed -i "s/\"LoggingUrl\": \"REPLACEME\"/\"LoggingUrl\": \"${{ secrets.LoggingUrl }}\"/g" appsettings.json
-          sed -i "s/\"LoggingApiKey\": \"REPLACEME\"/\"LoggingApiKey\": \"${{ secrets.LoggingApiKey }}\"/g" appsettings.json
+          $appSettings = Get-Content appsettings.json -Raw | ConvertFrom-Json
+          $appSettings.SignalR.HubUrl = ${{ secrets.HubUrl }}
+          $appSettings.Telemetry.LoggingUrl = ${{ secrets.LoggingUrl }}
+          $appSettings.Telemetry.LoggingApiKey = ${{ secrets.LoggingApiKey }}
+          $appSettings | ConvertTo-Json -Depth 10 | Set-Content appsettings.json
       - name: Publish
         run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release --no-restore -o release
       - name: Upload a Build Artifact
