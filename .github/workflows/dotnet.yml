@@ -39,15 +39,19 @@ jobs:
       - name: Replace values in appsettings.json
         run: |
           $appSettingsPath = (Get-ChildItem -Path . -Filter appsettings.json -Recurse -Force | Select-Object -First 1).FullName
+          echo "Reading from: $manifestPath"
           $appSettings = Get-Content $appSettingsPath -Raw | ConvertFrom-Json
           echo "Original: $appSettings"
+          
           $appSettings.SignalR.HubUrl = "${{ secrets.HubUrl }}"
           $appSettings.Telemetry.LoggingUrl = "${{ secrets.LoggingUrl }}"
           $appSettings.Telemetry.LoggingApiKey = "${{ secrets.LoggingApiKey }}"
-          echo "Replaced: $appSettings"
-          $appSettings | ConvertTo-Json -Depth 10 | Set-Content appsettings.json
-          echo "Updated appsettings.json:"
-          Get-Content appsettings.json
+          $replacedAppSettings = $appSettings | ConvertTo-Json
+          echo "Replaced: $replacedAppSettings"
+          
+          $replacedAppSettings | Set-Content $appSettingsPath
+          echo "Read-back appsettings.json:"
+          Get-Content $appSettingsPath
       - name: Setup .NET
         uses: actions/setup-dotnet@v2
         with:
@@ -63,6 +67,8 @@ jobs:
       - name: Set Android version
         run: |
           $manifestPath = (Get-ChildItem -Path . -Filter AndroidManifest.xml -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1).FullName
+          echo "Reading from: $manifestPath"
+          
           $versionName = "${{ env.APP_VERSION }}.${{ github.run_number }}"
           $versionCode = "${{ github.run_number }}"
 
