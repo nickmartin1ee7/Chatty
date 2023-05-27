@@ -18,8 +18,6 @@ namespace ChattyApp
 
         public static MauiApp CreateMauiApp(string deviceId = null)
         {
-            CheckPermissionsAsync().GetAwaiter().GetResult();
-
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
@@ -45,24 +43,6 @@ namespace ChattyApp
             builder.Services.AddTransient<AppShell>();
 
             return builder.Build();
-        }
-
-        private static async Task CheckPermissionsAsync()
-        {
-            await TryRequestPhoneEnabled();
-        }
-
-
-        private static async Task TryRequestPhoneEnabled()
-        {
-            if (!Permissions.IsDeclaredInManifest("android.permission.READ_PHONE_STATE"))
-                return;
-
-            while (await Permissions.CheckStatusAsync<Permissions.Phone>() != PermissionStatus.Granted)
-            {
-                if (await Permissions.RequestAsync<Permissions.Phone>() == PermissionStatus.Granted)
-                    break;
-            }
         }
 
         private static MauiAppBuilder AddLogger(MauiAppBuilder builder)

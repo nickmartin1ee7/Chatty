@@ -14,11 +14,30 @@ public partial class MainPage : ContentPage
 
     protected override async void OnAppearing()
     {
+        //await TryRequestPhoneEnabled(); // TODO: Remove if DeviceId is available during release
         await TryRequestNotificationsEnabled();
 
         _vm.StartConnectionTestJob();
 
         base.OnAppearing();
+    }
+
+    private static async Task TryRequestPhoneEnabled()
+    {
+        if (!Permissions.IsDeclaredInManifest("android.permission.READ_PHONE_STATE"))
+            return;
+
+        var status = await Permissions.CheckStatusAsync<Permissions.Phone>();
+
+        if (status == PermissionStatus.Granted)
+            return;
+
+        while (status != PermissionStatus.Granted)
+        {
+            status = await Permissions.RequestAsync<Permissions.Phone>();
+        }
+
+        Environment.Exit(0);
     }
 
     private static async Task TryRequestNotificationsEnabled()
