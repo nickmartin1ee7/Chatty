@@ -163,11 +163,12 @@ public class MainPageViewModel : BaseViewModel
 
     private async Task MessageProcessorJobAsync()
     {
+        var delay = TimeSpan.FromMilliseconds(10);
         var failureCount = 0;
 
         while (true)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(10));
+            await Task.Delay(delay);
 
             try
             {
@@ -185,7 +186,8 @@ public class MainPageViewModel : BaseViewModel
             {
                 failureCount++;
 
-                if (failureCount % 300 == 0)
+                // Log once per 2 minutes of failure
+                if ((delay * failureCount).TotalMinutes % TimeSpan.FromMinutes(2).TotalMinutes == 0)
                     _logger.LogError(ex, "Failed to dequeue message for user {username}; Failure count: {failureCount}",
                         _chatHub.ActiveUsername,
                         failureCount);
