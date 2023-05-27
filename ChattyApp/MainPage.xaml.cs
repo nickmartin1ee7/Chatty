@@ -15,7 +15,9 @@ public partial class MainPage : ContentPage
     protected override async void OnAppearing()
     {
         await TryRequestNotificationsEnabled();
+
         _vm.StartConnectionTestJob();
+
         base.OnAppearing();
     }
 
@@ -38,15 +40,8 @@ public partial class MainPage : ContentPage
         }
     }
 
-    public static bool AreDeviceNotificationsEnabled()
-    {
-#if ANDROID
-        return AndroidX.Core.App.NotificationManagerCompat.From(Platform.CurrentActivity!).AreNotificationsEnabled();
-#elif IOS
-        var settings = UIKit.UIApplication.SharedApplication.CurrentUserNotificationSettings.Types;
-        return settings != UIKit.UIUserNotificationType.None;
-#endif
-    }
+    public static bool AreDeviceNotificationsEnabled() =>
+        AndroidX.Core.App.NotificationManagerCompat.From(Platform.CurrentActivity!).AreNotificationsEnabled();
 
     private void Message_Entry_OnCompleted(object sender, EventArgs e)
     {
