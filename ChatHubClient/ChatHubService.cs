@@ -12,6 +12,8 @@ public class ChatHubService : IAsyncDisposable
     public ChatHubService(HttpClient httpClient, string hubUrl)
     {
         _httpClient = httpClient;
+        _httpClient.Timeout = TimeSpan.FromSeconds(10);
+
         _chatHubUrl = new(hubUrl);
         _chatHubUrl.Path = "chathub";
 
