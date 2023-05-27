@@ -25,6 +25,7 @@ public class MainPageViewModel : BaseViewModel
     private Color _statusLabelColor;
     private bool _statusVisibility;
     private Task _connectivityCheckerJob;
+    private bool _confirmedRegistered;
 
     public MainPageViewModel(
         ILogger<MainPageViewModel> logger,
@@ -95,7 +96,12 @@ public class MainPageViewModel : BaseViewModel
             IsRegistered = true;
             ToggleLoading();
             _ = ShowTemporaryStatusAsync("Connected", System.Drawing.Color.Green);
-            _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
+
+            if (!_confirmedRegistered)
+            {
+                _confirmedRegistered = true;
+                _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
+            }
         }
     }
 
