@@ -37,7 +37,6 @@ public class MainPageViewModel : BaseViewModel
         _chatHub.OnReconnecting += ChatHubOnReconnecting;
         _chatHub.OnReconnected += ChatHubOnReconnected;
 
-        _chatHub.OnUserDisconnected += ChatHubOnOnUserDisconnected;
         _chatHub.OnMessageReceived += ChatHubOnOnMessageReceived;
         _chatHub.OnUsernameRegistered += ChatHubOnUsernameRegistered;
 
@@ -69,12 +68,6 @@ public class MainPageViewModel : BaseViewModel
         await ShowConstantStatusAsync("Offline", System.Drawing.Color.Red);
     }
 
-    private void ChatHubOnOnUserDisconnected(object sender, string username)
-    {
-        Messages.Add(new Message(new User("System"), $"{username} left")
-            .WithTimestamp(DateTimeOffset.Now));
-    }
-
     private async Task ShowTemporaryStatusAsync(string text, System.Drawing.Color color)
     {
         StatusLabelText = text;
@@ -104,9 +97,6 @@ public class MainPageViewModel : BaseViewModel
             _ = ShowTemporaryStatusAsync("Connected", System.Drawing.Color.Green);
             _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
         }
-
-        Messages.Add(new Message(new User("System"), $"{username} joined")
-            .WithTimestamp(DateTimeOffset.Now));
     }
 
     private void ChatHubOnOnMessageReceived(object sender, Message userMessage)

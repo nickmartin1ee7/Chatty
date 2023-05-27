@@ -35,7 +35,7 @@ public class ChatHub : Hub
 
         if (message.Recipient?.Username == "all")
         {
-            await Clients.All.SendAsync("ReceiveMessage", message);
+            await Clients.All.SendAsync(Notification.Subscription.ReceiveMessage, message);
             _logger.LogInformation("Broadcasted message; Correlation Id: {cid}", message.Id);
         }
         else
@@ -44,13 +44,13 @@ public class ChatHub : Hub
 
             if (!string.IsNullOrEmpty(recipientId))
             {
-                await Clients.Client(recipientId).SendAsync("ReceiveMessage", message);
+                await Clients.Client(recipientId).SendAsync(Notification.Subscription.ReceiveMessage, message);
                 _logger.LogInformation("DMed message to connection: {recipientId}; Correlation Id: {cid}", recipientId, message.Id);
             }
             else
             {
                 // Handle recipient not found
-                await Clients.Client(senderId).SendAsync("ErrorMessage", "Recipient not found");
+                await Clients.Client(senderId).SendAsync(Notification.Subscription.ErrorMessage, "Recipient not found");
                 _logger.LogInformation("Failed to DM message; Correlation Id: {cid}", message.Id);
             }
         }
@@ -66,7 +66,7 @@ public class ChatHub : Hub
         _logger.LogInformation("New connection: {userId}", userId);
 
         ConnectedUsers.TryAdd(userId, new User(string.Empty));
-        await Clients.All.SendAsync("UserConnected", userId);
+        await Clients.All.SendAsync(Notification.Subscription.UserConnected, userId);
         await base.OnConnectedAsync();
     }
 
@@ -77,14 +77,19 @@ public class ChatHub : Hub
 
         string userId = Context.ConnectionId;
 
-        if (!ConnectedUsers.TryRemove(userId, out var username))
+        if (!ConnectedUsers.TryRemove(userId, out var user))
             return;
 
-        _logger.LogInformation("Connection {userId} ended with username {username}",
+        _logger.LogInformation("Connection {userId} ended with user {username}",
             userId,
-            username);
+            user);
 
-        await Clients.All.SendAsync("UserDisconnected", username);
+        await Clients.All.SendAsync(Notification.Subscription.UserDisconnected, user);
+
+        if (!string.IsNullOrWhiteSpace(user.Username))
+        {
+            await SendMessage(new Message(MessageType.System, new User("System"), $"{user.Username} has left"));
+        }
 
         if (exception is not null)
             _logger.LogWarning(exception,
@@ -109,7 +114,9 @@ public class ChatHub : Hub
             username);
 
         ConnectedUsers[userId] = new User(username);
-        await Clients.Client(userId).SendAsync("UsernameRegistered", username);
+        await Clients.Client(userId).SendAsync(Notification.Subscription.UsernameRegistered, username);
+
+        SendMessage(new Message(MessageType.System, new User("System"), $"{username} has joined"));
 
         if (Messages.IsEmpty)
             return;
@@ -121,7 +128,7 @@ public class ChatHub : Hub
 
         foreach (var message in Messages)
         {
-            await Clients.Client(userId).SendAsync("ReceiveMessage", message);
+            await Clients.Client(userId).SendAsync(Notification.Subscription.ReceiveMessage, message);
         }
     }
 }

@@ -32,16 +32,16 @@ public class ChatHubService : IAsyncDisposable
         _connection.Reconnected += async newConnectionId =>
             OnReconnected?.Invoke(this, newConnectionId);
 
-        _connection.On<Message>("ReceiveMessage", (message) =>
+        _connection.On<Message>(Notification.Subscription.ReceiveMessage, (message) =>
             OnMessageReceived?.Invoke(this, message));
 
-        _connection.On<string>("UserConnected", (userId) =>
+        _connection.On<string>(Notification.Subscription.UserConnected, (userId) =>
             OnUserConnected?.Invoke(this, userId));
 
-        _connection.On<string>("UserDisconnected", (userId) =>
+        _connection.On<string>(Notification.Subscription.UserDisconnected, (userId) =>
             OnUserDisconnected?.Invoke(this, userId));
 
-        _connection.On<string>("UsernameRegistered", (userName) =>
+        _connection.On<string>(Notification.Subscription.UsernameRegistered, (userName) =>
             OnUsernameRegistered?.Invoke(this, userName));
     }
 
@@ -86,16 +86,20 @@ public class ChatHubService : IAsyncDisposable
 
     public Task SendMessageAsync(string content, string recipientUsername = "all")
     {
-        var message = new Message(new User(ActiveUsername), content, new User(recipientUsername));
+        var message = new Message(
+            MessageType.Chat,
+            new User(ActiveUsername!),
+            content,
+            new User(recipientUsername));
 
         return message.IsValid()
-            ? _connection.InvokeAsync("SendMessage", message)
+            ? _connection.InvokeAsync(Notification.Action.SendMessage, message)
             : Task.CompletedTask;
     }
 
     private Task RegisterUsernameAsync(string username)
     {
-        return _connection.InvokeAsync("RegisterUsername", username);
+        return _connection.InvokeAsync(Notification.Action.RegisterUsername, username);
     }
 
     public async ValueTask DisposeAsync()
