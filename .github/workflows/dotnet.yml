@@ -46,7 +46,8 @@ jobs:
           $manifestContent | Set-Content -Path $manifestPath
       - name: Replace values in appsettings.json
         run: |
-          $appSettings = Get-Content appsettings.json -Raw | ConvertFrom-Json
+          $appSettingsPath = (Get-ChildItem -Path . -Filter appsettings.json -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1).FullName
+          $appSettings = Get-Content $appSettingsPath -Raw | ConvertFrom-Json
           $appSettings.SignalR.HubUrl = ${{ secrets.HubUrl }}
           $appSettings.Telemetry.LoggingUrl = ${{ secrets.LoggingUrl }}
           $appSettings.Telemetry.LoggingApiKey = ${{ secrets.LoggingApiKey }}
