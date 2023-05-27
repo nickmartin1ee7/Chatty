@@ -163,6 +163,7 @@ public class MainPageViewModel : BaseViewModel
 
     private async Task MessageProcessorJobAsync()
     {
+        var delayOfFailureBeforeLog = TimeSpan.FromMinutes(5);
         var delay = TimeSpan.FromMilliseconds(10);
         var failureCount = 0;
 
@@ -186,11 +187,11 @@ public class MainPageViewModel : BaseViewModel
             {
                 failureCount++;
 
-                // Log once per 2 minutes of failure
-                if ((delay * failureCount).TotalMinutes % TimeSpan.FromMinutes(2).TotalMinutes == 0)
-                    _logger.LogError(ex, "Failed to dequeue message for user {username}; Failure count: {failureCount}",
+                var failureDuration = (delay * failureCount);
+                if (failureDuration.TotalMilliseconds % delayOfFailureBeforeLog.TotalMilliseconds == 0)
+                    _logger.LogError(ex, "Failed to dequeue message for user {username}; Failure duration: {failureDuration}",
                         _chatHub.ActiveUsername,
-                        failureCount);
+                        failureDuration);
             }
         }
     }
