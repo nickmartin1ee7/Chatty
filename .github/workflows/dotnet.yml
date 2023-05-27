@@ -60,8 +60,6 @@ jobs:
         run: |
           dotnet workload install android --ignore-failed-sources
           dotnet workload install maui --ignore-failed-sources
-      - name: Restore dependencies
-        run: nuget restore ./ChattyApp/ChattyApp.csproj
       - name: Set Android version
         run: |
           $manifestPath = (Get-ChildItem -Path . -Filter AndroidManifest.xml -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1).FullName
@@ -80,7 +78,7 @@ jobs:
           # Write the modified content back to the AndroidManifest.xml file
           $manifestContent | Set-Content -Path $manifestPath
       - name: Publish
-        run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release --no-restore -o release
+        run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release -o release
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.0.0
         with:
