@@ -7,12 +7,16 @@ public class ChatHubService : IAsyncDisposable
     private readonly HttpClient _httpClient;
     private readonly HubConnection _connection;
     private readonly UriBuilder _chatHubUrl;
+    private readonly string _healthcheckUri;
 
     public ChatHubService(HttpClient httpClient, string hubUrl)
     {
         _httpClient = httpClient;
         _chatHubUrl = new(hubUrl);
         _chatHubUrl.Path = "chathub";
+
+        _healthcheckUri = _chatHubUrl.Uri.AbsoluteUri
+            .Replace(_chatHubUrl.Uri.PathAndQuery, "/healthcheck");
 
         _connection = new HubConnectionBuilder()
             .WithAutomaticReconnect()
@@ -42,7 +46,7 @@ public class ChatHubService : IAsyncDisposable
     }
 
     public bool IsStarted { get; private set; }
-    public string ActiveUsername { get; private set; }
+    public string? ActiveUsername { get; private set; }
 
     public event EventHandler<Message> OnMessageReceived;
     public event EventHandler<string> OnUserConnected;
@@ -103,8 +107,7 @@ public class ChatHubService : IAsyncDisposable
     {
         try
         {
-            var result = await _httpClient.GetAsync(_chatHubUrl.Uri.AbsoluteUri
-                .Replace(_chatHubUrl.Uri.PathAndQuery, "/healthcheck"));
+            var result = await _httpClient.GetAsync(_healthcheckUri);
             return result.IsSuccessStatusCode;
         }
         catch (Exception e)

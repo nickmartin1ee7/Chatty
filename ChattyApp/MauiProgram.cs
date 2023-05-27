@@ -12,9 +12,9 @@ namespace ChattyApp
 {
     public static class MauiProgram
     {
-        private static IConfiguration s_config;
+        private static Settings _settings;
 
-        public static MauiApp CreateMauiApp()
+        public static MauiApp CreateMauiApp(string deviceId = null)
         {
             var builder = MauiApp.CreateBuilder();
             builder
@@ -25,7 +25,7 @@ namespace ChattyApp
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            AddConfiguration(builder); // This sets: s_config
+            AddConfiguration(builder, deviceId); // This sets: s_config
 
             AddLogger(builder);
 
@@ -34,9 +34,7 @@ namespace ChattyApp
             builder.Services.AddSingleton<ChatHubService>(sp =>
                 new ChatHubService(
                     sp.GetRequiredService<HttpClient>(),
-                    s_config
-                        .GetSection("SignalR:HubUrl")
-                        .Value!));
+                    _settings.SignalR.HubUrl));
 
             builder.Services.AddTransient<MainPageViewModel>();
             builder.Services.AddTransient<MainPage>();
@@ -47,18 +45,18 @@ namespace ChattyApp
 
         private static MauiAppBuilder AddLogger(MauiAppBuilder builder)
         {
-            builder.Services.AddLogging(logger =>
-                logger.AddSerilog(Log.Logger = new LoggerConfiguration()
-                    .WriteTo.Console()
-                    .WriteTo.Seq(
-                        serverUrl: s_config.GetSection("Telemetry:LoggingUrl").Value!,
-                        apiKey: s_config.GetSection("Telemetry:LoggingApiKey").Value!)
-                    .CreateLogger()));
+            builder.Logging.AddSerilog(Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .WriteTo.Seq(
+                    serverUrl: _settings.Telemetry.LoggingUrl,
+                    apiKey: _settings.Telemetry.LoggingApiKey)
+                .Enrich.WithProperty("DeviceId", _settings.Telemetry.DeviceId)
+                .CreateLogger());
 
             return builder;
         }
 
-        private static MauiAppBuilder AddConfiguration(MauiAppBuilder builder)
+        private static MauiAppBuilder AddConfiguration(MauiAppBuilder builder, string? deviceId)
         {
             const string configFileName = "ChattyApp.Resources.appsettings.json";
 
@@ -66,11 +64,15 @@ namespace ChattyApp
                                          .GetManifestResourceStream(configFileName)
                                      ?? throw new ArgumentException($"Configuration file ({configFileName}) not found!", nameof(configFileName));
 
-            s_config = new ConfigurationBuilder()
+            IConfiguration config;
+            builder.Configuration.AddConfiguration(config = new ConfigurationBuilder()
                 .AddJsonStream(configStream)
-                .Build();
+                .Build());
 
-            builder.Configuration.AddConfiguration(s_config);
+            _settings = config.Get<Settings>() ?? throw new ArgumentNullException(nameof(Settings), "Failed to create settings from appsettings file");
+            _settings.Telemetry.DeviceId = deviceId;
+
+            builder.Services.AddTransient<Settings>(_ => _settings);
 
             return builder;
         }
