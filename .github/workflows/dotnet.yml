@@ -15,7 +15,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ./WebApplication/WebApplication.csproj
     - name: Build
       run: dotnet build --no-restore -c Release ./WebApplication/WebApplication.csproj
     - name: Docker Login
@@ -68,7 +68,7 @@ jobs:
           dotnet workload install android --ignore-failed-sources
           dotnet workload install maui --ignore-failed-sources
       - name: Restore dependencies
-        run: nuget restore
+        run: nuget restore ./ChattyApp/ChattyApp.csproj
       - name: Set Android version
         run: |
           $manifestPath = (Get-ChildItem -Path . -Filter AndroidManifest.xml -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1).FullName
