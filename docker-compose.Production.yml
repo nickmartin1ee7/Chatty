@@ -1,0 +1,33 @@
+version: '3.4'
+
+services:
+  webapplication:
+    image: nickmartin1ee7/chattyapi:latest
+    ports:
+      - 12180:80
+    depends_on:
+      - seq
+    deploy:
+      replicas: 1
+      mode: replicated
+      update_config:
+        parallelism: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+      placement:
+        preferences:
+          - spread: node.lables.slot
+          - spread: node.id
+
+  seq:
+    image: datalust/seq:latest
+    ports:
+      - 12080:80
+    environment:
+        - ACCEPT_EULA=Y
+    volumes:
+        - seqdata:/data
+
+volumes:
+  seqdata:

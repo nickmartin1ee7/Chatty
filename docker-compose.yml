@@ -1,0 +1,22 @@
+version: '3.4'
+
+services:
+  webapplication:
+    image: ${DOCKER_REGISTRY-}webapplication
+    build:
+      context: .
+      dockerfile: WebApplication/Dockerfile
+    depends_on:
+      - seq
+
+  seq:
+    image: datalust/seq:latest
+    ports:
+      - 8080:80
+    environment:
+        - ACCEPT_EULA=Y
+    volumes:
+        - seqdata:/data
+
+volumes:
+  seqdata:
