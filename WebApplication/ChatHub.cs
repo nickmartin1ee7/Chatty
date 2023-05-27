@@ -88,7 +88,7 @@ public class ChatHub : Hub
 
         if (!string.IsNullOrWhiteSpace(user.Username))
         {
-            await SendMessage(new Message(MessageType.System, new User("System"), $"{user.Username} has left"));
+            await SendMessage(GenerateSystemMessage($"{user.Username} has left"));
         }
 
         if (exception is not null)
@@ -98,6 +98,12 @@ public class ChatHub : Hub
 
         await base.OnDisconnectedAsync(exception);
     }
+
+    private Message GenerateSystemMessage(string content) =>
+        new(MessageType.System,
+            new User("System"),
+            content,
+            new User("all"));
 
     public async Task RegisterUsername(string username)
     {
@@ -116,7 +122,7 @@ public class ChatHub : Hub
         ConnectedUsers[userId] = new User(username);
         await Clients.Client(userId).SendAsync(Notification.Subscription.UsernameRegistered, username);
 
-        await SendMessage(new Message(MessageType.System, new User("System"), $"{username} has joined"));
+        await SendMessage(GenerateSystemMessage($"{username} has joined"));
 
         if (Messages.IsEmpty)
             return;
