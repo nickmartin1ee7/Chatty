@@ -25,7 +25,6 @@ public class MainPageViewModel : BaseViewModel
     private Color _statusLabelColor;
     private bool _statusVisibility;
     private Task _connectivityCheckerJob;
-    private bool _confirmedRegistered;
 
     public MainPageViewModel(
         ILogger<MainPageViewModel> logger,
@@ -93,15 +92,12 @@ public class MainPageViewModel : BaseViewModel
     {
         if (username == _chatHub.ActiveUsername)
         {
+            if (!IsRegistered)
+                _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
+
             IsRegistered = true;
             ToggleLoading();
             _ = ShowTemporaryStatusAsync("Connected", System.Drawing.Color.Green);
-
-            if (!_confirmedRegistered)
-            {
-                _confirmedRegistered = true;
-                _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
-            }
         }
     }
 
@@ -118,20 +114,35 @@ public class MainPageViewModel : BaseViewModel
 
     private void SortMessages()
     {
-        var orderedMessages = new List<Message>(Messages.OrderBy(m => m.Timestamp));
+        var orderedMessages = new List<Message>(Messages
+            .DistinctBy(m => m.Id)
+            .OrderBy(m => m.Timestamp));
 
-        for (int i = 0; i < orderedMessages.Count; i++)
+        if (Messages.Count == orderedMessages.Count)
         {
-            var message = orderedMessages[i];
-            var oldIdx = Messages.IndexOf(message);
-
-            if (oldIdx != i)
+            for (int i = 0; i < orderedMessages.Count; i++)
             {
-                Messages.Move(oldIdx, i);
-                _logger.LogDebug("Sorted out of order message ({oldIdx} -> {newIdx}): {message}",
-                    oldIdx,
-                    i,
-                    message);
+                var message = orderedMessages[i];
+                var oldIdx = Messages.IndexOf(message);
+
+                if (oldIdx != i)
+                {
+                    Messages.Move(oldIdx, i);
+                    _logger.LogDebug("Sorting->Sorted out of order message ({oldIdx} -> {newIdx}): {message}",
+                        oldIdx,
+                        i,
+                        message);
+                }
+            }
+        }
+        else
+        {
+            _logger.LogDebug("Sorting->Clearing and re-adding every message");
+
+            Messages.Clear();
+            foreach (var message in orderedMessages)
+            {
+                Messages.Add(message);
             }
         }
     }
