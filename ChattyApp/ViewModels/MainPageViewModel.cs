@@ -122,7 +122,7 @@ public class MainPageViewModel : BaseViewModel
             if (oldIdx != i)
             {
                 Messages.Move(oldIdx, i);
-                _logger.LogInformation("Sorted out of order message ({oldIdx} -> {newIdx}): {message}",
+                _logger.LogDebug("Sorted out of order message ({oldIdx} -> {newIdx}): {message}",
                     oldIdx,
                     i,
                     message);
@@ -156,7 +156,7 @@ public class MainPageViewModel : BaseViewModel
         try
         {
             ToggleLoading();
-            _logger.LogInformation("Attempting to register user under the username: {username}", username);
+            _logger.LogDebug("Attempting to register user under the username: {username}", username);
             await _chatHub.StartAsync(username);
         }
         catch (Exception e)
@@ -201,7 +201,7 @@ public class MainPageViewModel : BaseViewModel
 
                 var failureDuration = (delay * failureCount);
                 if (failureDuration.TotalMilliseconds % delayOfFailureBeforeLog.TotalMilliseconds == 0)
-                    _logger.LogError(ex, "Failed to dequeue message for user {username}; Failure duration: {failureDuration}",
+                    _logger.LogWarning(ex, "Failed to dequeue message for user {username}; Failure duration: {failureDuration}",
                         _chatHub.ActiveUsername,
                         failureDuration);
             }
@@ -223,13 +223,13 @@ public class MainPageViewModel : BaseViewModel
         {
             if (!_chatHub.IsStarted)
             {
-                _logger.LogInformation("Sending message is re-initializing chat hub connection with username: {username}",
+                _logger.LogDebug("Sending message is re-initializing chat hub connection with username: {username}",
                     _chatHub.ActiveUsername);
 
                 await _chatHub.StartAsync(_chatHub.ActiveUsername);
             }
 
-            _logger.LogInformation("User {username} is sending message: {messageText}",
+            _logger.LogDebug("User {username} is sending message: {messageText}",
                 _chatHub.ActiveUsername,
                 message);
 
