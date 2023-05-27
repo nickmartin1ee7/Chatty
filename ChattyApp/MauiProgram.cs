@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 
 using ChatHubClient;
 
@@ -7,6 +8,7 @@ using ChattyApp.ViewModels;
 using Microsoft.Extensions.Configuration;
 
 using Serilog;
+using Serilog.Debugging;
 
 namespace ChattyApp
 {
@@ -45,8 +47,11 @@ namespace ChattyApp
 
         private static MauiAppBuilder AddLogger(MauiAppBuilder builder)
         {
+            SelfLog.Enable(msg =>
+                Debug.WriteLine(msg));
+
             builder.Logging.AddSerilog(Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
+                .WriteTo.Debug()
                 .WriteTo.Seq(
                     serverUrl: _settings.Telemetry.LoggingUrl,
                     apiKey: _settings.Telemetry.LoggingApiKey)
@@ -56,7 +61,7 @@ namespace ChattyApp
             return builder;
         }
 
-        private static MauiAppBuilder AddConfiguration(MauiAppBuilder builder, string? deviceId)
+        private static MauiAppBuilder AddConfiguration(MauiAppBuilder builder, string deviceId)
         {
             const string configFileName = "ChattyApp.Resources.appsettings.json";
 

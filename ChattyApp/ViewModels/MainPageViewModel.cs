@@ -103,9 +103,31 @@ public class MainPageViewModel : BaseViewModel
     {
         Messages.Add(userMessage);
 
+        SortMessages();
+
         if (userMessage.Sender.Username != _chatHub.ActiveUsername // Not current user
             && userMessage.Timestamp >= DateTimeOffset.UtcNow.AddMinutes(-2)) // Received less than two minutes ago
             ShowNewMessageNotification(userMessage);
+    }
+
+    private void SortMessages()
+    {
+        var orderedMessages = new List<Message>(Messages.OrderBy(m => m.Timestamp));
+
+        for (int i = 0; i < orderedMessages.Count; i++)
+        {
+            var message = orderedMessages[i];
+            var oldIdx = Messages.IndexOf(message);
+
+            if (oldIdx != i)
+            {
+                Messages.Move(oldIdx, i);
+                _logger.LogInformation("Sorted out of order message ({oldIdx} -> {newIdx}): {message}",
+                    oldIdx,
+                    i,
+                    message);
+            }
+        }
     }
 
     private void ShowNewMessageNotification(Message userMessage)
