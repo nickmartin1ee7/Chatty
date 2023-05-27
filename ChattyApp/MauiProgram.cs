@@ -31,6 +31,8 @@ namespace ChattyApp
 
             AddLogger(builder);
 
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+
             builder.Services.AddTransient<HttpClient>();
 
             builder.Services.AddSingleton<ChatHubService>(sp =>
@@ -43,6 +45,18 @@ namespace ChattyApp
             builder.Services.AddTransient<AppShell>();
 
             return builder.Build();
+        }
+
+        private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var exception = (Exception)e.ExceptionObject;
+
+            Log.Logger.Fatal(exception,
+                "[CRASH] The application crashed due to an unhandled exception ({exceptionType}): {exceptionMessage}",
+                exception.GetType().Name,
+                exception.Message);
+
+            Log.CloseAndFlush();
         }
 
         private static MauiAppBuilder AddLogger(MauiAppBuilder builder)
