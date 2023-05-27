@@ -45,7 +45,7 @@
                 <Entry.Keyboard>
                     <Keyboard x:FactoryMethod="Create">
                         <x:Arguments>
-                            <KeyboardFlags>CapitalizeWord</KeyboardFlags>
+                            <KeyboardFlags>CapitalizeSentence</KeyboardFlags>
                         </x:Arguments>
                     </Keyboard>
                 </Entry.Keyboard>
