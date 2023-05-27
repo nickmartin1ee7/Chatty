@@ -107,16 +107,16 @@ public class ChatHubService : IAsyncDisposable
         await _connection.DisposeAsync();
     }
 
-    public async Task<bool> TestConnectivityAsync()
+    public async Task<(bool Online, string? ErrorMessage)> TestConnectivityAsync()
     {
         try
         {
             var result = await _httpClient.GetAsync(_healthcheckUri);
-            return result.IsSuccessStatusCode;
+            return (result.IsSuccessStatusCode, result.ReasonPhrase);
         }
         catch (Exception e)
         {
-            return false;
+            return (false, e.Message);
         }
     }
 }

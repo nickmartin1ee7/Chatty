@@ -243,13 +243,19 @@ public class MainPageViewModel : BaseViewModel
         {
             while (true)
             {
-                if (!await _chatHub.TestConnectivityAsync())
+                var testResult = await _chatHub.TestConnectivityAsync();
+
+                if (!testResult.Online)
                 {
                     await ShowConstantStatusAsync("Offline", System.Drawing.Color.Red);
+
+                    _logger.LogWarning("Device failed to connect with backend due to: {errorMessage}",
+                        testResult.ErrorMessage);
                 }
                 else if (StatusLabelText == "Offline" && StatusVisibility) // TODO: Make a state enum
                 {
                     await ShowTemporaryStatusAsync("Back online", System.Drawing.Color.Green);
+                    _logger.LogInformation("Device reconnected to backend");
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(5));
