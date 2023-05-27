@@ -16,14 +16,15 @@ public class MainPageViewModel : BaseViewModel
     private readonly ChatHubService _chatHub;
     private readonly Queue<Func<Task>> _messages = new();
     private readonly Task _messageProcessor;
+    private readonly SemaphoreSlim _registrationSlim = new(1, 1);
     private string _usernameText;
     private string _chatText;
     private string _messageText;
     private string _statusLabelText;
     private bool _isRegistered;
     private bool _isLoading;
-    private Color _statusLabelColor;
     private bool _statusVisibility;
+    private Color _statusLabelColor;
     private Task _connectivityCheckerJob;
 
     public MainPageViewModel(
@@ -88,17 +89,20 @@ public class MainPageViewModel : BaseViewModel
         return Task.CompletedTask;
     }
 
-    private void ChatHubOnUsernameRegistered(object sender, string username)
+    private async void ChatHubOnUsernameRegistered(object sender, string username)
     {
-        if (username == _chatHub.ActiveUsername)
-        {
-            if (!IsRegistered)
-                _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
+        await _registrationSlim.WaitAsync();
 
-            IsRegistered = true;
-            ToggleLoading();
-            _ = ShowTemporaryStatusAsync("Connected", System.Drawing.Color.Green);
-        }
+        if (username != _chatHub.ActiveUsername || IsRegistered)
+            return;
+
+        IsRegistered = true;
+        ToggleLoading();
+        _ = ShowTemporaryStatusAsync("Connected", System.Drawing.Color.Green);
+
+        _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
+
+        _registrationSlim.Release();
     }
 
     private void ChatHubOnOnMessageReceived(object sender, Message userMessage)

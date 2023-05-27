@@ -40,7 +40,7 @@ namespace ChattyApp
                     sp.GetRequiredService<HttpClient>(),
                     _settings.SignalR.HubUrl));
 
-            builder.Services.AddTransient<MainPageViewModel>();
+            builder.Services.AddSingleton<MainPageViewModel>();
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<AppShell>();
 
