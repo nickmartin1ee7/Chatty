@@ -28,13 +28,6 @@ jobs:
     - name: Build Docker Image (WebApplication)
       if: ${{ github.ref == 'refs/heads/main' }}
       run: docker buildx build --platform linux/arm64,linux/amd64 -f "WebApplication/Dockerfile" --force-rm -t nickmartin1ee7/chattyapi:latest --push .
-  apideployment:
-    runs-on: self-hosted
-    needs: api
-    steps:
-    - name: Trigger Production Image Pull
-      if: ${{ github.ref == 'refs/heads/main' }}
-      run: curl --location -k --request POST '${{ secrets.PROD_WEBHOOK_URI }}'
   android:
     runs-on: windows-latest
     steps:
