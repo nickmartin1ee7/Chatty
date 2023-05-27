@@ -82,9 +82,9 @@ public class ChatHub : Hub
 
         _logger.LogInformation("Connection {userId} ended with user {username}",
             userId,
-            user);
+            user.Username);
 
-        await Clients.All.SendAsync(Notification.Subscription.UserDisconnected, user);
+        await Clients.All.SendAsync(Notification.Subscription.UserDisconnected, user.Username);
 
         if (!string.IsNullOrWhiteSpace(user.Username))
         {
@@ -116,7 +116,7 @@ public class ChatHub : Hub
         ConnectedUsers[userId] = new User(username);
         await Clients.Client(userId).SendAsync(Notification.Subscription.UsernameRegistered, username);
 
-        SendMessage(new Message(MessageType.System, new User("System"), $"{username} has joined"));
+        await SendMessage(new Message(MessageType.System, new User("System"), $"{username} has joined"));
 
         if (Messages.IsEmpty)
             return;

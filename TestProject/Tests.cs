@@ -114,16 +114,6 @@ namespace TestProject
         {
             bool received = false;
 
-            _chatHubA.OnUserConnected += (o, e) =>
-            {
-                Console.WriteLine($"{nameof(_chatHubA)}.{nameof(OnUserConnected)}: {e}");
-            };
-
-            _chatHubB.OnUserConnected += (o, e) =>
-            {
-                Console.WriteLine($"{nameof(_chatHubB)}.{nameof(OnUserConnected)}: {e}");
-            };
-
             _chatHubA.OnUserDisconnected += (o, e) =>
             {
                 Console.WriteLine($"{nameof(_chatHubA)}.{nameof(OnUserDisconnected)}: {e}");
