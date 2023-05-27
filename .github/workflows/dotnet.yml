@@ -66,3 +66,4 @@ jobs:
           draft: false
           prerelease: false
           files: "release/*-Signed.apk"
+          generate_release_notes: true
