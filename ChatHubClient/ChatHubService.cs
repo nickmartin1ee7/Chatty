@@ -67,7 +67,7 @@ public class ChatHubService : IAsyncDisposable
         }
         catch (Exception ex)
         {
-            await _connection.DisposeAsync();
+            await _connection.StopAsync();
             IsStarted = false;
             ActiveUsername = null;
             throw;
