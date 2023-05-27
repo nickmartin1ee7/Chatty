@@ -13,7 +13,19 @@ jobs:
       - name: Print Directory Structure
         shell: pwsh
         run: |
-          Get-ChildItem -Recurse      
+          Get-ChildItem -Recurse
+      - name: Replace values in appsettings.json
+        run: |
+          $appSettingsPath = (Get-ChildItem -Path . -Filter appsettings.json -Recurse -Force | Select-Object -First 1).FullName
+          $appSettings = Get-Content $appSettingsPath -Raw | ConvertFrom-Json
+          echo "Original: $appSettings"
+          $appSettings.SignalR.HubUrl = "${{ secrets.HubUrl }}"
+          $appSettings.Telemetry.LoggingUrl = "${{ secrets.LoggingUrl }}"
+          $appSettings.Telemetry.LoggingApiKey = "${{ secrets.LoggingApiKey }}"
+          echo "Replaced: $appSettings"
+          $appSettings | ConvertTo-Json -Depth 10 | Set-Content appsettings.json
+          echo "Updated appsettings.json:"
+          Get-Content appsettings.json
       - name: Setup .NET
         uses: actions/setup-dotnet@v2
         with:
@@ -45,16 +57,6 @@ jobs:
 
           # Write the modified content back to the AndroidManifest.xml file
           $manifestContent | Set-Content -Path $manifestPath
-      - name: Replace values in appsettings.json
-        run: |
-          $appSettingsPath = (Get-ChildItem -Path . -Filter appsettings.json -Recurse -ErrorAction SilentlyContinue -Force | Select-Object -First 1).FullName
-          $appSettings = Get-Content $appSettingsPath -Raw | ConvertFrom-Json
-          echo "Original: $appSettings"
-          $appSettings.SignalR.HubUrl = "${{ secrets.HubUrl }}"
-          $appSettings.Telemetry.LoggingUrl = "${{ secrets.LoggingUrl }}"
-          $appSettings.Telemetry.LoggingApiKey = "${{ secrets.LoggingApiKey }}"
-          $appSettings | ConvertTo-Json -Depth 10 | Set-Content appsettings.json
-          echo "Replaced: $appSettings"
       - name: Publish
         run: dotnet publish ./ChattyApp/ChattyApp.csproj -f net6.0-android -c Release --no-restore -o release
       - name: Upload a Build Artifact
