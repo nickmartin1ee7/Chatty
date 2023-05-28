@@ -21,7 +21,9 @@ public class ChatHub : Hub
     {
         message.Timestamp = DateTime.UtcNow;
 
-        if (!message.IsValid())
+        // Stop invalid or duplicate messages
+        if (!message.IsValid()
+            || Messages.FirstOrDefault(m => m.Id == message.Id) is not null)
             return;
 
         Messages.Enqueue(message);

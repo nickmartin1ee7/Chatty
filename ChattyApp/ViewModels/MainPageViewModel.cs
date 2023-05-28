@@ -107,12 +107,18 @@ public class MainPageViewModel : BaseViewModel
 
     private void ChatHubOnOnMessageReceived(object sender, Message userMessage)
     {
+        // Stop invalid or duplicate messages
+        if (!userMessage.IsValid()
+            || Messages.FirstOrDefault(m => m.Id == userMessage.Id) is not null)
+            return;
+
         Messages.Add(userMessage);
 
         SortMessages();
 
         if (userMessage.Sender.Username != _chatHub.ActiveUsername // Not current user
-            && userMessage.Timestamp >= DateTimeOffset.UtcNow.AddMinutes(-2)) // Received less than two minutes ago
+            && userMessage.Timestamp >= DateTimeOffset.UtcNow.AddMinutes(-2)  // Received less than two minutes ago
+            && !IsUserObserving) // Is page not being observed
             ShowNewMessageNotification(userMessage);
     }
 
@@ -359,6 +365,12 @@ public class MainPageViewModel : BaseViewModel
             SetField(ref _statusVisibility, value);
         }
     }
+
+    /// <summary>
+    /// Represents the user currently viewing the Main Page.
+    /// Does not emit notification of changes.
+    /// </summary>
+    public bool IsUserObserving { get; set; }
 
     public ICommand SendCommand { get; }
 

@@ -12,8 +12,17 @@ public partial class MainPage : ContentPage
         InitializeComponent();
     }
 
+    protected override void OnDisappearing()
+    {
+        _vm.IsUserObserving = false;
+
+        base.OnDisappearing();
+    }
+
     protected override async void OnAppearing()
     {
+        _vm.IsUserObserving = true;
+
         //await TryRequestPhoneEnabled(); // TODO: Remove if DeviceId is available during release
         await TryRequestNotificationsEnabled();
 
