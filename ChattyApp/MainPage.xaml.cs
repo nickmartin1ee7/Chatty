@@ -22,13 +22,12 @@ public partial class MainPage : ContentPage
     protected override async void OnAppearing()
     {
         _vm.IsUserObserving = true;
+
+        await TryRequestNotificationsEnabled();
+        _vm.StartConnectionTestJob();
+
         await Task.Delay(100);
         TypingImageAnimation.IsAnimationPlaying = true;
-
-        //await TryRequestPhoneEnabled(); // TODO: Remove if DeviceId is available during release
-        await TryRequestNotificationsEnabled();
-
-        _vm.StartConnectionTestJob();
 
         base.OnAppearing();
     }

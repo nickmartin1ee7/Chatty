@@ -14,7 +14,7 @@ public class MainPageViewModel : BaseViewModel
 {
     private readonly ILogger<MainPageViewModel> _logger;
     private readonly ChatHubService _chatHub;
-    private readonly Queue<Func<Task>> _messages = new();
+    private readonly Queue<(Func<Task>, string)> _messages = new();
     private readonly Task _messageProcessor;
     private readonly SemaphoreSlim _registrationSlim = new(1, 1); // Lock the user registration event
     private readonly SemaphoreSlim _statusSemaphoreSlim = new(1, 1); // Lock the Status UI banner
@@ -219,14 +219,17 @@ public class MainPageViewModel : BaseViewModel
 
             try
             {
-                if (!_messages.TryPeek(out var messageAction))
+                if (!_messages.TryPeek(out var messagePair))
                 {
                     continue;
                 }
 
-                await messageAction();
-                _messages.Dequeue();
-                _logger.LogInformation("Message sent for username: {username}", _chatHub.ActiveUsername);
+                await messagePair.Item1();
+                _ = _messages.Dequeue();
+                _logger.LogInformation("Message sent by {username}: {message}",
+                    _chatHub.ActiveUsername,
+                    messagePair.Item2
+                    );
                 failureCount = 0;
             }
             catch (Exception ex)
@@ -253,7 +256,7 @@ public class MainPageViewModel : BaseViewModel
         (SendCommand as Command).ChangeCanExecute();
 
 
-        _messages.Enqueue(async () =>
+        _messages.Enqueue((async () =>
         {
             if (!_chatHub.IsStarted)
             {
@@ -268,7 +271,7 @@ public class MainPageViewModel : BaseViewModel
                 message);
 
             await _chatHub.SendMessageAsync(message);
-        });
+        }, message));
     }
 
     public void StartConnectionTestJob()
@@ -283,13 +286,13 @@ public class MainPageViewModel : BaseViewModel
                 {
                     await ShowConstantStatusAsync(StatusState.Offline);
 
-                    _logger.LogWarning("Device failed to connect with backend due to: {errorMessage}",
+                    _logger.LogDebug("Device failed to connect with backend due to: {errorMessage}",
                         testResult.ErrorMessage);
                 }
                 else if (CurrentStatusState == StatusState.Offline && StatusVisibility)
                 {
                     await ShowTemporaryStatusAsync(StatusState.Reconnected);
-                    _logger.LogInformation("Device reconnected to backend");
+                    _logger.LogDebug("Device reconnected to backend");
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(5));
