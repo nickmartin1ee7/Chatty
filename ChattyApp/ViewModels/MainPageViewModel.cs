@@ -57,25 +57,25 @@ public class MainPageViewModel : BaseViewModel
 
     private async void ChatHubOnReconnected(object sender, string e)
     {
-        await ShowTemporaryStatusAsync("Back online", System.Drawing.Color.Green);
+        await ShowTemporaryStatusAsync("Back online", Colors.Green);
     }
 
     private async void ChatHubOnReconnecting(object sender, Exception e)
     {
-        await ShowConstantStatusAsync("Reconnecting...", System.Drawing.Color.Gray);
+        await ShowConstantStatusAsync("Reconnecting...", Colors.Gray);
     }
 
     private async void ChatHubOnClosed(object sender, Exception e)
     {
-        await ShowConstantStatusAsync("Offline", System.Drawing.Color.Red);
+        await ShowConstantStatusAsync("Offline", Colors.Red);
     }
 
-    private async Task ShowTemporaryStatusAsync(string text, System.Drawing.Color color)
+    private async Task ShowTemporaryStatusAsync(string text, Color color)
     {
         await _statusSemaphoreSlim.WaitAsync();
 
         StatusLabelText = text;
-        StatusLabelColor = color.ConvertToMauiColor();
+        StatusLabelColor = color;
         StatusVisibility = true;
 
         await Task.Delay(TimeSpan.FromSeconds(5));
@@ -85,12 +85,12 @@ public class MainPageViewModel : BaseViewModel
         _statusSemaphoreSlim.Release();
     }
 
-    private async Task ShowConstantStatusAsync(string text, System.Drawing.Color color)
+    private async Task ShowConstantStatusAsync(string text, Color color)
     {
         await _statusSemaphoreSlim.WaitAsync();
 
         StatusLabelText = text;
-        StatusLabelColor = color.ConvertToMauiColor();
+        StatusLabelColor = color;
         StatusVisibility = true;
 
         _statusSemaphoreSlim.Release();
@@ -104,8 +104,8 @@ public class MainPageViewModel : BaseViewModel
             return;
 
         IsRegistered = true;
-        ToggleLoading();
-        _ = ShowTemporaryStatusAsync("Connected", System.Drawing.Color.Green);
+        ToggleLoading(visible: false);
+        _ = ShowTemporaryStatusAsync("Connected", Colors.Green);
 
         _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
 
@@ -189,7 +189,7 @@ public class MainPageViewModel : BaseViewModel
 
         try
         {
-            ToggleLoading();
+            ToggleLoading(visible: true);
             _logger.LogDebug("Attempting to register user under the username: {username}", username);
             await _chatHub.StartAsync(username);
         }
@@ -198,13 +198,20 @@ public class MainPageViewModel : BaseViewModel
             _logger.LogError(e, "Failed to register user with username: {username}",
                 username);
 
-            ToggleLoading();
+            ToggleLoading(visible: false);
         }
     }
 
-    private void ToggleLoading()
+    private void ToggleLoading(bool? visible = null)
     {
-        IsLoading = !IsLoading;
+        if (visible.HasValue)
+        {
+            IsLoading = visible.Value;
+        }
+        else
+        {
+            IsLoading = !IsLoading;
+        }
     }
 
     private async Task MessageProcessorJobAsync()
@@ -281,14 +288,14 @@ public class MainPageViewModel : BaseViewModel
 
                 if (!testResult.Online)
                 {
-                    await ShowConstantStatusAsync("Offline", System.Drawing.Color.Red);
+                    await ShowConstantStatusAsync("Offline", Colors.Red);
 
                     _logger.LogWarning("Device failed to connect with backend due to: {errorMessage}",
                         testResult.ErrorMessage);
                 }
                 else if (StatusLabelText == "Offline" && StatusVisibility) // TODO: Make a state enum
                 {
-                    await ShowTemporaryStatusAsync("Back online", System.Drawing.Color.Green);
+                    await ShowTemporaryStatusAsync("Back online", Colors.Green);
                     _logger.LogInformation("Device reconnected to backend");
                 }
 
