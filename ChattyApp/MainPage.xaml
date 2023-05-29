@@ -96,8 +96,8 @@
                 HorizontalTextAlignment="Center"
             />
             <Image
+                x:Name="TypingImageAnimation"
                 Source="phone_typing.gif"
-                IsAnimationPlaying="True"
                 Aspect="AspectFit"
                 />
             <Label
