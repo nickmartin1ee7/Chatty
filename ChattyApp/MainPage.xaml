@@ -89,6 +89,22 @@
             Grid.Row="1"
             Margin="25"
             IsVisible="{Binding IsRegistered, Converter={StaticResource BoolNotConverter}}">
+            <Label
+                Text="Welcome to Chatty"
+                FontSize="Large"
+                Margin="15"
+                HorizontalTextAlignment="Center"
+            />
+            <Image
+                Source="phone_typing.gif"
+                IsAnimationPlaying="True"
+                Aspect="AspectFit"
+                />
+            <Label
+                Text="Pick a username! You can change it at any time."
+                HorizontalTextAlignment="Center"
+                Margin="5"
+                />
             <Entry
                 Text="{Binding UsernameText}"
                 Placeholder="Enter username..."
