@@ -16,7 +16,8 @@ public class MainPageViewModel : BaseViewModel
     private readonly ChatHubService _chatHub;
     private readonly Queue<Func<Task>> _messages = new();
     private readonly Task _messageProcessor;
-    private readonly SemaphoreSlim _registrationSlim = new(1, 1);
+    private readonly SemaphoreSlim _registrationSlim = new(1, 1); // Lock the user registration event
+    private readonly SemaphoreSlim _statusSemaphoreSlim = new(1, 1); // Lock the Status UI banner
     private string _usernameText;
     private string _chatText;
     private string _messageText;
@@ -71,6 +72,8 @@ public class MainPageViewModel : BaseViewModel
 
     private async Task ShowTemporaryStatusAsync(string text, System.Drawing.Color color)
     {
+        await _statusSemaphoreSlim.WaitAsync();
+
         StatusLabelText = text;
         StatusLabelColor = color.ConvertToMauiColor();
         StatusVisibility = true;
@@ -78,15 +81,19 @@ public class MainPageViewModel : BaseViewModel
         await Task.Delay(TimeSpan.FromSeconds(5));
 
         StatusVisibility = false;
+
+        _statusSemaphoreSlim.Release();
     }
 
-    private Task ShowConstantStatusAsync(string text, System.Drawing.Color color)
+    private async Task ShowConstantStatusAsync(string text, System.Drawing.Color color)
     {
+        await _statusSemaphoreSlim.WaitAsync();
+
         StatusLabelText = text;
         StatusLabelColor = color.ConvertToMauiColor();
         StatusVisibility = true;
 
-        return Task.CompletedTask;
+        _statusSemaphoreSlim.Release();
     }
 
     private async void ChatHubOnUsernameRegistered(object sender, string username)
