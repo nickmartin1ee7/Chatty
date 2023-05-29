@@ -124,8 +124,6 @@ public class ChatHub : Hub
         ConnectedUsers[userId] = new User(username);
         await Clients.Client(userId).SendAsync(Notification.Subscription.UsernameRegistered, username);
 
-        await SendMessage(GenerateSystemMessage($"{username} has joined"));
-
         if (Messages.IsEmpty)
             return;
 
@@ -138,5 +136,7 @@ public class ChatHub : Hub
         {
             await Clients.Client(userId).SendAsync(Notification.Subscription.ReceiveMessage, message);
         }
+
+        await SendMessage(GenerateSystemMessage($"{username} has joined"));
     }
 }
