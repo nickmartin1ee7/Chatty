@@ -27,6 +27,7 @@ public class MainPageViewModel : BaseViewModel
     private bool _statusVisibility;
     private Color _statusLabelColor;
     private Task _connectivityCheckerJob;
+    private StatusState _currentStatusState;
 
     public MainPageViewModel(
         ILogger<MainPageViewModel> logger,
@@ -57,43 +58,35 @@ public class MainPageViewModel : BaseViewModel
 
     private async void ChatHubOnReconnected(object sender, string e)
     {
-        await ShowTemporaryStatusAsync("Back online", Colors.Green);
+        await ShowTemporaryStatusAsync(StatusState.Reconnected);
     }
 
     private async void ChatHubOnReconnecting(object sender, Exception e)
     {
-        await ShowConstantStatusAsync("Reconnecting...", Colors.Gray);
+        await ShowConstantStatusAsync(StatusState.Reconnecting);
     }
 
     private async void ChatHubOnClosed(object sender, Exception e)
     {
-        await ShowConstantStatusAsync("Offline", Colors.Red);
+        await ShowConstantStatusAsync(StatusState.Offline);
     }
 
-    private async Task ShowTemporaryStatusAsync(string text, Color color)
+    private async Task ShowTemporaryStatusAsync(StatusState statusState)
     {
         await _statusSemaphoreSlim.WaitAsync();
 
-        StatusLabelText = text;
-        StatusLabelColor = color;
+        CurrentStatusState = statusState;
         StatusVisibility = true;
 
         await Task.Delay(TimeSpan.FromSeconds(5));
 
         StatusVisibility = false;
-
-        _statusSemaphoreSlim.Release();
     }
 
-    private async Task ShowConstantStatusAsync(string text, Color color)
+    private async Task ShowConstantStatusAsync(StatusState statusState)
     {
-        await _statusSemaphoreSlim.WaitAsync();
-
-        StatusLabelText = text;
-        StatusLabelColor = color;
+        CurrentStatusState = statusState;
         StatusVisibility = true;
-
-        _statusSemaphoreSlim.Release();
     }
 
     private async void ChatHubOnUsernameRegistered(object sender, string username)
@@ -105,7 +98,7 @@ public class MainPageViewModel : BaseViewModel
 
         IsRegistered = true;
         ToggleLoading(visible: false);
-        _ = ShowTemporaryStatusAsync("Connected", Colors.Green);
+        _ = ShowTemporaryStatusAsync(StatusState.Online);
 
         _logger.LogInformation("User {username} successfully registered", _chatHub.ActiveUsername);
 
@@ -288,14 +281,14 @@ public class MainPageViewModel : BaseViewModel
 
                 if (!testResult.Online)
                 {
-                    await ShowConstantStatusAsync("Offline", Colors.Red);
+                    await ShowConstantStatusAsync(StatusState.Offline);
 
                     _logger.LogWarning("Device failed to connect with backend due to: {errorMessage}",
                         testResult.ErrorMessage);
                 }
-                else if (StatusLabelText == "Offline" && StatusVisibility) // TODO: Make a state enum
+                else if (CurrentStatusState == StatusState.Offline && StatusVisibility)
                 {
-                    await ShowTemporaryStatusAsync("Back online", Colors.Green);
+                    await ShowTemporaryStatusAsync(StatusState.Reconnected);
                     _logger.LogInformation("Device reconnected to backend");
                 }
 
@@ -386,7 +379,24 @@ public class MainPageViewModel : BaseViewModel
     /// </summary>
     public bool IsUserObserving { get; set; }
 
+    public StatusState CurrentStatusState
+    {
+        get => _currentStatusState;
+        set
+        {
+            SetField(ref _currentStatusState, value);
+        }
+    }
+
     public ICommand SendCommand { get; }
 
     public ICommand RegisterCommand { get; }
+
+    public enum StatusState
+    {
+        Offline,
+        Reconnected,
+        Online,
+        Reconnecting
+    }
 }

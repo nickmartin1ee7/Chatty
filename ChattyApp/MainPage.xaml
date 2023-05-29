@@ -3,9 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ChattyApp.ViewModels"
              xmlns:chattyApp="clr-namespace:ChattyApp"
+             xmlns:chatHubClient="clr-namespace:ChatHubClient;assembly=ChatHubClient"
              x:Class="ChattyApp.MainPage"
+             x:DataType="vm:MainPageViewModel"
              Title="Chatty">
-    <!--x:DataType="vm:MainPageViewModel"-->
     <ContentPage.Resources>
         <chattyApp:BoolNotConverter x:Key="BoolNotConverter" />
         <chattyApp:DateTimeOffsetToLocalDateTimeConverter x:Key="DateTimeOffsetConverter" />
@@ -21,10 +22,62 @@
             Padding="5"
             FontAttributes="Bold"
             FontSize="Large"
-            Text="{Binding StatusLabelText}"
-            BackgroundColor="{Binding StatusLabelColor}"
-            IsVisible="{Binding StatusVisibility}"
-            />
+            IsVisible="{Binding StatusVisibility}">
+            <Label.Triggers>
+                <DataTrigger
+                    TargetType="Label"
+                    Binding="{Binding CurrentStatusState}"
+                    Value="Offline">
+                    <Setter
+                        Property="Label.BackgroundColor"
+                        Value="Red"
+                        />
+                    <Setter
+                        Property="Label.Text"
+                        Value="Offline"
+                        />
+                </DataTrigger>
+                <DataTrigger
+                    TargetType="Label"
+                    Binding="{Binding CurrentStatusState}"
+                    Value="Reconnected">
+                    <Setter
+                        Property="Label.BackgroundColor"
+                        Value="Green"
+                    />
+                    <Setter
+                        Property="Label.Text"
+                        Value="Back online"
+                    />
+                </DataTrigger>
+                <DataTrigger
+                    TargetType="Label"
+                    Binding="{Binding CurrentStatusState}"
+                    Value="Online">
+                    <Setter
+                        Property="Label.BackgroundColor"
+                        Value="DarkGreen"
+                    />
+                    <Setter
+                        Property="Label.Text"
+                        Value="Connected"
+                    />
+                </DataTrigger>
+                <DataTrigger
+                    TargetType="Label"
+                    Binding="{Binding CurrentStatusState}"
+                    Value="Reconnecting">
+                    <Setter
+                        Property="Label.BackgroundColor"
+                        Value="Grey"
+                    />
+                    <Setter
+                        Property="Label.Text"
+                        Value="Reconnecting..."
+                    />
+                </DataTrigger>
+            </Label.Triggers>
+        </Label>
         <ActivityIndicator
             Grid.Column="0"
             Grid.Row="1"
@@ -75,7 +128,7 @@
             ItemsUpdatingScrollMode="KeepLastItemInView"
             ItemsSource="{Binding Messages}">
             <CollectionView.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="chatHubClient:Message">
                     <Border
                         Margin="5">
                         <Grid
@@ -85,7 +138,7 @@
                             <Label
                                 Grid.Column="0"
                                 Grid.Row="0"
-                                Text="{Binding Sender.Username}"
+                                Text="{Binding Path=Sender.Username}"
                                 FontAttributes="Bold"
                                 VerticalTextAlignment="Center"
                                 />
