@@ -15,7 +15,7 @@
 		<ApplicationTitle>ChattyApp</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.chattyapp</ApplicationId>
+		<ApplicationId>com.GitGood.chattyapp</ApplicationId>
 		<ApplicationIdGuid>02B04480-91EC-4657-B33D-E91FE978A57C</ApplicationIdGuid>
 
 		<!-- Versions -->
