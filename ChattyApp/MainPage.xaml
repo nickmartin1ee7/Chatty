@@ -95,11 +95,24 @@
                 Margin="15"
                 HorizontalTextAlignment="Center"
             />
-            <Image
-                x:Name="TypingImageAnimation"
-                Source="phone_typing.gif"
-                Aspect="AspectFit"
-                />
+            <WebView
+                HorizontalOptions="Fill"
+                VerticalOptions="Fill"
+                BackgroundColor="Transparent">
+                <WebView.Source>
+                    <HtmlWebViewSource>
+                        <HtmlWebViewSource.Html>
+                            <![CDATA[
+                                <HTML>
+                                <BODY>
+                                <img src="phone_typing.gif" style="width: 100%"/>
+                                </BODY>
+                                </HTML>
+                            ]]>
+                        </HtmlWebViewSource.Html>
+                    </HtmlWebViewSource>
+                </WebView.Source>
+            </WebView>
             <Label
                 Text="Pick a username! You can change it at any time."
                 HorizontalTextAlignment="Center"

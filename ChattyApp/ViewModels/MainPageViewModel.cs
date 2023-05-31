@@ -179,6 +179,7 @@ public class MainPageViewModel : BaseViewModel
     private async Task RegisterAsync()
     {
         var username = UsernameText;
+        await StoreUsernamePreferenceAsync(username);
 
         try
         {
@@ -194,6 +195,9 @@ public class MainPageViewModel : BaseViewModel
             ToggleLoading(visible: false);
         }
     }
+
+    private static Task StoreUsernamePreferenceAsync(string username) =>
+        SecureStorage.SetAsync("last_username", username);
 
     private void ToggleLoading(bool? visible = null)
     {
@@ -273,6 +277,77 @@ public class MainPageViewModel : BaseViewModel
             await _chatHub.SendMessageAsync(message);
         }, message));
     }
+
+    public async Task LoadLastUsername()
+    {
+        UsernameText = await SecureStorage.GetAsync("last_username");
+    }
+
+    public async Task TryRequestPhoneEnabled()
+    {
+        if (!Permissions.IsDeclaredInManifest("android.permission.READ_PHONE_STATE"))
+            return;
+
+        var status = await Permissions.CheckStatusAsync<Permissions.Phone>();
+
+        if (status == PermissionStatus.Granted)
+            return;
+
+        while (status != PermissionStatus.Granted)
+        {
+            status = await Permissions.RequestAsync<Permissions.Phone>();
+        }
+
+        Environment.Exit(0);
+    }
+
+    public async Task TryRequestNotificationsEnabled()
+    {
+        var shouldPrompt = true;
+
+        try
+        {
+            if (!bool.TryParse(await SecureStorage.GetAsync("prompt_notifications"), out shouldPrompt))
+            {
+                await SetPromptNotificationsAsync(shouldPrompt = true); // Default to prompt user
+            }
+        }
+        catch (Exception e)
+        {
+            // No logger available here
+        }
+
+        if (shouldPrompt && !AreDeviceNotificationsEnabled())
+        {
+            var userPermissionResult = await Application.Current!.MainPage!.DisplayAlert(
+                "Enable Notifications",
+                "Your notifications are currently turned off for this app. To receive audio notifications, you need to enable them.",
+                "Go to Settings",
+                "Cancel");
+
+            if (userPermissionResult)
+            {
+                AppInfo.ShowSettingsUI();
+            }
+
+            try
+            {
+                await SetPromptNotificationsAsync(userPermissionResult); // Don't prompt again
+            }
+            catch (Exception e)
+            {
+                // No logger available here
+            }
+        }
+    }
+
+    private static async Task SetPromptNotificationsAsync(bool shouldPrompt)
+    {
+        await SecureStorage.SetAsync("prompt_notifications", shouldPrompt.ToString());
+    }
+
+    private static bool AreDeviceNotificationsEnabled() =>
+        AndroidX.Core.App.NotificationManagerCompat.From(Platform.CurrentActivity!).AreNotificationsEnabled();
 
     public void StartConnectionTestJob()
     {
