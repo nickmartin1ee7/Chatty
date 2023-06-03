@@ -37,6 +37,7 @@
             </ListView>
         </StackPanel>
         <ListView
+            Name="MessagesListView"
             Grid.Column="1"
             Grid.ColumnSpan="2"
             Grid.Row="0"

@@ -1,4 +1,8 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 using ChatHubClient;
@@ -7,22 +11,46 @@ namespace ChattyWpfApp.ViewModels;
 
 public class MainWindowViewModel : BaseViewModel
 {
+    private readonly Action _scrollMessagesToBottom;
+    private readonly ChatHubService _chatClient;
     private string _messageText = string.Empty;
     private User _me;
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(Action scrollMessagesToBottom)
     {
-        SendCommand = new Command(execute: Send);
+        _scrollMessagesToBottom = scrollMessagesToBottom;
+        SendCommand = new Command(execute: async (o) => await SendAsync(o));
+
+        _chatClient = new ChatHubService(new HttpClient(), "REPLACEME"); // TODO: App Configuration
+
+        _chatClient.OnUsernameRegistered += (o, e) =>
+            Application.Current.Dispatcher.Invoke(() => OnChatClientOnOnUsernameRegistered(this, e));
+
+        _chatClient.OnMessageReceived += (o, e) =>
+            Application.Current.Dispatcher.Invoke(() => OnChatClientOnOnMessageReceived(this, e));
     }
 
-    private void Send(object? obj)
+    private void OnChatClientOnOnMessageReceived(object o, Message e)
     {
-        _me = new User("Test");
+        if (!Users.Contains(e.Sender))
+            Users.Add(e.Sender);
 
-        if (!Users.Contains(_me))
-            Users.Add(_me);
+        Messages.Add(e);
 
-        Messages.Add(new Message(MessageType.Chat, _me, obj?.ToString() ?? MessageText));
+        _scrollMessagesToBottom();
+    }
+
+    private void OnChatClientOnOnUsernameRegistered(object o, string e)
+    {
+        var newUser = new User(e);
+
+        if (!Users.Contains(newUser))
+            Users.Add(newUser);
+    }
+
+    private async Task SendAsync(object? obj)
+    {
+        await _chatClient.SendMessageAsync(obj?.ToString() ?? MessageText);
         MessageText = string.Empty;
     }
 
@@ -37,4 +65,9 @@ public class MainWindowViewModel : BaseViewModel
     }
 
     public ICommand SendCommand { get; }
+
+    public Task InitializeAsync()
+    {
+        return _chatClient.StartAsync("Test"); // TODO: Ask user for name
+    }
 }

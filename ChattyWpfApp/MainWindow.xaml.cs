@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -11,12 +13,12 @@ namespace ChattyWpfApp
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly MainWindowViewModel _vm;
+        private MainWindowViewModel _vm;
 
         public MainWindow()
         {
+            DataContext = _vm ??= new MainWindowViewModel(ScrollMessagesToBottom);
             InitializeComponent();
-            DataContext = _vm = new MainWindowViewModel();
         }
 
         private void MessageTextBox_OnKeyDown(object sender, KeyEventArgs e)
@@ -27,6 +29,18 @@ namespace ChattyWpfApp
                 SendMessageButton.Focus();
                 _vm.SendCommand.Execute(text);
             }
+        }
+
+        protected override void OnInitialized(EventArgs e)
+        {
+            _ = Task.Run(() => _vm.InitializeAsync());
+            base.OnInitialized(e);
+        }
+
+        private void ScrollMessagesToBottom()
+        {
+            MessagesListView.SelectedIndex = MessagesListView.Items.Count - 1;
+            MessagesListView.ScrollIntoView(MessagesListView.SelectedItem);
         }
     }
 }
