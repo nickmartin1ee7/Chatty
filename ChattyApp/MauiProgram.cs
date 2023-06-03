@@ -77,16 +77,26 @@ namespace ChattyApp
 
         private static MauiAppBuilder AddConfiguration(MauiAppBuilder builder, string deviceId)
         {
-            const string configFileName = "ChattyApp.Resources.appsettings.json";
+            var assembly = Assembly.GetExecutingAssembly();
 
-            using var configStream = Assembly.GetExecutingAssembly()
+            var configFileName = $"{assembly.GetName().Name}.Resources.appsettings.json";
+
+            using var configStream = assembly
                                          .GetManifestResourceStream(configFileName)
                                      ?? throw new ArgumentException($"Configuration file ({configFileName}) not found!", nameof(configFileName));
 
-            IConfiguration config;
-            builder.Configuration.AddConfiguration(config = new ConfigurationBuilder()
-                .AddJsonStream(configStream)
-                .Build());
+            var configBuilder = new ConfigurationBuilder()
+                .AddJsonStream(configStream);
+
+#if DEBUG
+            var secretsFileName = $"{assembly.GetName().Name}.Resources.secrets.json";
+            using var secretsStream = assembly.GetManifestResourceStream(secretsFileName);
+            if (secretsStream is not null)
+                configBuilder.AddJsonStream(secretsStream);
+#endif
+
+            var config = configBuilder.Build();
+            builder.Configuration.AddConfiguration(config);
 
             _settings = config.Get<Settings>() ?? throw new ArgumentNullException(nameof(Settings), "Failed to create settings from appsettings file");
             _settings.Telemetry.DeviceId = deviceId;

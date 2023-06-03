@@ -53,10 +53,15 @@
 
 	<ItemGroup>
 	  <None Remove="Resources\appsettings.json" />
+	  <None Remove="Resources\secrets.json" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\appsettings.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\secrets.json" />
 	</ItemGroup>
 
 	<ItemGroup>
